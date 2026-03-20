@@ -1,0 +1,42 @@
+name: Run Benchmarks
+
+on:
+  schedule:
+    # Every day at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: benchmark
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Run benchmarks
+        run: python -m python_lsp_compare bench-servers --baseline-server pyright
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add latest-results.md latest-results/
+          git diff --cached --quiet || git commit -m "Update benchmark results [skip ci]"
+          git push
