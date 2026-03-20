@@ -181,7 +181,6 @@ def handle_run_servers(args: argparse.Namespace) -> int:
     summary_path = args.summary_output or output_dir / f"summary-{run_stamp}.json"
 
     server_summaries: list[dict[str, object]] = []
-    overall_success = True
     for server in configured_servers:
         version_info = describe_server_version(server)
         requested_scenarios = args.scenario or list(BUILTIN_SCENARIOS.keys())
@@ -196,7 +195,6 @@ def handle_run_servers(args: argparse.Namespace) -> int:
         output_path = output_dir / f"{server.id}-{run_stamp}.json"
         write_report(report, output_path)
         success = all(item.success for item in report.scenario_reports)
-        overall_success = overall_success and success
         print(f"{server.id}: {'ok' if success else 'failed'} -> {output_path}")
         for scenario in report.scenario_reports:
             status = "ok" if scenario.success else "failed"
@@ -238,7 +236,7 @@ def handle_run_servers(args: argparse.Namespace) -> int:
     print(f"Wrote summary to {summary_path}")
     print(f"Wrote markdown report to {markdown_path}")
     print(f"Wrote CSV report to {csv_path}")
-    return 0 if overall_success else 1
+    return 0
 
 
 def handle_bench_servers(args: argparse.Namespace) -> int:
@@ -250,7 +248,6 @@ def handle_bench_servers(args: argparse.Namespace) -> int:
     summary_path = args.summary_output or output_dir / f"summary-{run_stamp}.json"
 
     server_summaries: list[dict[str, object]] = []
-    overall_success = True
     requested_benchmarks: list[str] | None = None
     for server in configured_servers:
         print(f"=== Starting server: {server.id} ({server.display_name}) ===")
@@ -282,7 +279,6 @@ def handle_bench_servers(args: argparse.Namespace) -> int:
         output_path = output_dir / f"{server.id}-{run_stamp}.json"
         write_report(report, output_path)
         success = all(item.success for item in report.benchmark_reports)
-        overall_success = overall_success and success
         print(f"{server.id}: {'ok' if success else 'failed'} -> {output_path}")
         for benchmark in report.benchmark_reports:
             status = "ok" if benchmark.success else "failed"
@@ -327,7 +323,7 @@ def handle_bench_servers(args: argparse.Namespace) -> int:
     print(f"Wrote summary to {summary_path}")
     print(f"Wrote markdown report to {markdown_path}")
     print(f"Wrote CSV report to {csv_path}")
-    return 0 if overall_success else 1
+    return 0
 
 
 def handle_run_benchmark(args: argparse.Namespace) -> int:
