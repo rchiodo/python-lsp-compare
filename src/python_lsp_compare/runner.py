@@ -156,6 +156,9 @@ def _run_single_benchmark_suite(
         logger=progress,
     )
 
+    _emit_progress(progress, f"[{suite.name}] launch command: {benchmark_environment.launch_command}")
+    _emit_progress(progress, f"[{suite.name}] workspace root: {benchmark_environment.workspace_root}")
+    _emit_progress(progress, f"[{suite.name}] python: {benchmark_environment.python_executable}")
     client = LspClient(
         benchmark_environment.launch_command,
         timeout_seconds=timeout_seconds,
@@ -168,8 +171,9 @@ def _run_single_benchmark_suite(
     point_reports: list[BenchmarkPointReport] = []
     success = True
     try:
-        _emit_progress(progress, f"[{suite.name}] initialize")
+        _emit_progress(progress, f"[{suite.name}] sending initialize request (timeout={timeout_seconds}s)")
         client.initialize(benchmark_environment.workspace_root)
+        _emit_progress(progress, f"[{suite.name}] initialize response received")
         client.initialized()
         _emit_progress(progress, f"[{suite.name}] send workspace configuration")
         client.did_change_configuration(
@@ -198,6 +202,11 @@ def _run_single_benchmark_suite(
     except Exception as exc:
         success = False
         error_message = str(exc)
+        _emit_progress(progress, f"[{suite.name}] ERROR: {exc}")
+        if client.stderr_lines:
+            _emit_progress(progress, f"[{suite.name}] server stderr (last 10 lines):")
+            for line in client.stderr_lines[-10:]:
+                _emit_progress(progress, f"[{suite.name}]   {line}")
     finally:
         try:
             client.exit()

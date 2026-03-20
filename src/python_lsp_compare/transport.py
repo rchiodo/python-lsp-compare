@@ -29,6 +29,7 @@ class StdioJsonRpcTransport:
         env: dict[str, str] | None = None,
         request_handler: Callable[[dict[str, Any]], Any] | None = None,
         notification_handler: Callable[[dict[str, Any]], None] | None = None,
+        trace: Callable[[str], None] | None = None,
     ) -> None:
         if not command:
             raise ValueError("command must not be empty")
@@ -44,6 +45,7 @@ class StdioJsonRpcTransport:
         self._stderr_lines: list[str] = []
         self._request_handler = request_handler
         self._notification_handler = notification_handler
+        self._trace = trace
 
     @property
     def stderr_lines(self) -> list[str]:
@@ -52,6 +54,7 @@ class StdioJsonRpcTransport:
     def start(self) -> None:
         if self._process is not None:
             return
+        self._trace_message(f"  transport: launching {self._command} cwd={self._cwd}")
         self._process = subprocess.Popen(
             self._command,
             stdin=subprocess.PIPE,
@@ -60,6 +63,7 @@ class StdioJsonRpcTransport:
             cwd=self._cwd,
             env=self._env if self._env is not None else os.environ.copy(),
         )
+        self._trace_message(f"  transport: process started pid={self._process.pid}")
         self._reader_thread = threading.Thread(target=self._read_stdout_loop, daemon=True)
         self._reader_thread.start()
         self._stderr_thread = threading.Thread(target=self._read_stderr_loop, daemon=True)
@@ -118,6 +122,14 @@ class StdioJsonRpcTransport:
                 response.request_size = request_size
                 return response
             except Exception as exc:
+                self._trace_message(f"  transport: ** timeout waiting for {method} id={request_id} after {timeout_seconds}s")
+                # Check if process is still alive
+                process = self._process
+                if process is not None:
+                    poll = process.poll()
+                    self._trace_message(f"  transport: process poll={poll} (None=alive)")
+                    if self._stderr_lines:
+                        self._trace_message(f"  transport: stderr={self._stderr_lines[-5:]}")
                 raise TimeoutError(f"Timed out waiting for response to {method}") from exc
         finally:
             with self._pending_lock:
@@ -214,6 +226,10 @@ class StdioJsonRpcTransport:
         if self._notification_handler is None:
             return
         self._notification_handler(payload)
+
+    def _trace_message(self, message: str) -> None:
+        if self._trace is not None:
+            self._trace(message)
 
     @staticmethod
     def _parse_content_length(header_lines: list[bytes]) -> int:

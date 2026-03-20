@@ -214,7 +214,12 @@ def handle_bench_servers(args: argparse.Namespace) -> int:
     overall_success = True
     requested_benchmarks: list[str] | None = None
     for server in configured_servers:
+        print(f"=== Starting server: {server.id} ({server.display_name}) ===")
+        print(f"  command: {server.command}")
+        print(f"  args: {server.args}")
+        print(f"  benchmark_launch_command: {server.benchmark_launch_command}")
         version_info = describe_server_version(server)
+        print(f"  version: {version_info.get('label', 'unknown')}")
         timeout_seconds = args.timeout_seconds or DEFAULT_BENCHMARK_TIMEOUT_SECONDS
         benchmark_root = args.benchmark_root
         install_requirements = True

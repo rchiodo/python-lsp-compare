@@ -11,7 +11,7 @@
       "launch": {
         "command": "C:/Program Files/nodejs/node.exe",
         "args": [
-          "../../tools/pylance_stdio_launcher.cjs",
+          "../tools/pylance_stdio_launcher.cjs",
           "--server-path",
           "C:/path/to/pylance-server/dist/server.js"
         ]

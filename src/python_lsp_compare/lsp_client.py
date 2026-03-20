@@ -25,6 +25,7 @@ class LspClient:
             env=env,
             request_handler=self._handle_server_request,
             notification_handler=self._handle_server_notification,
+            trace=trace,
         )
         self._timeout_seconds = timeout_seconds
         self._next_request_id = 1
@@ -154,10 +155,12 @@ class LspClient:
     def request(self, method: str, params: dict[str, Any] | None, context: dict[str, Any] | None = None) -> Any:
         request_id = self._next_request_id
         self._next_request_id += 1
+        self._trace_message(f"  transport: -> request id={request_id} method={method}")
         started_at = time.time()
         started_perf = time.perf_counter()
         response = self._transport.send_request(request_id, method, params, timeout_seconds=self._timeout_seconds)
         duration_ms = (time.perf_counter() - started_perf) * 1000
+        self._trace_message(f"  transport: <- response id={request_id} method={method} ok={'result' in response.payload}")
         payload = response.payload
         bytes_sent = response.request_size
         if "error" in payload:
