@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
 from .benchmark_suites import discover_benchmark_suites
 from .report_csv import write_csv_report
-from .report_markdown import write_markdown_report
+from .report_markdown import render_markdown_report, write_markdown_report
 from .runner import BUILTIN_SCENARIOS, run_benchmarks, run_scenarios, write_report
 from .server_configs import load_server_config_file, load_server_configs, write_summary
 from .server_download import ALL_SERVER_SPECS, download_all_servers
@@ -122,11 +123,12 @@ def handle_render_report(args: argparse.Namespace) -> int:
     csv_path = args.csv_output or args.summary.with_suffix(".csv")
     write_markdown_report(args.summary, output_path, title=args.title, baseline_server_id=args.baseline_server)
     write_csv_report(args.summary, csv_path, baseline_server_id=args.baseline_server)
-    latest_results_path = _latest_results_path(args.summary)
-    latest_results_path.write_text(output_path.read_text(encoding="utf-8"), encoding="utf-8")
+    # For render-report, extract the run stamp from the summary filename
+    stem = args.summary.stem
+    stamp = stem.split("-", 1)[1] if "-" in stem else stem
+    _update_latest_results(args.summary.parent, stamp, output_path, args.summary, baseline_server_id=args.baseline_server, title=args.title)
     print(f"Wrote markdown report to {output_path}")
     print(f"Wrote CSV report to {csv_path}")
-    print(f"Wrote latest results to {latest_results_path}")
     return 0
 
 
@@ -227,12 +229,10 @@ def handle_run_servers(args: argparse.Namespace) -> int:
     csv_path = args.csv_output or summary_path.with_suffix(".csv")
     write_markdown_report(summary_path, markdown_path, baseline_server_id=baseline_server)
     write_csv_report(summary_path, csv_path, baseline_server_id=baseline_server)
-    latest_results_path = _latest_results_path(summary_path)
-    latest_results_path.write_text(markdown_path.read_text(encoding="utf-8"), encoding="utf-8")
+    _update_latest_results(output_dir, run_stamp, markdown_path, summary_path, baseline_server_id=baseline_server)
     print(f"Wrote summary to {summary_path}")
     print(f"Wrote markdown report to {markdown_path}")
     print(f"Wrote CSV report to {csv_path}")
-    print(f"Wrote latest results to {latest_results_path}")
     return 0 if overall_success else 1
 
 
@@ -316,12 +316,10 @@ def handle_bench_servers(args: argparse.Namespace) -> int:
     csv_path = args.csv_output or summary_path.with_suffix(".csv")
     write_markdown_report(summary_path, markdown_path, baseline_server_id=baseline_server)
     write_csv_report(summary_path, csv_path, baseline_server_id=baseline_server)
-    latest_results_path = _latest_results_path(summary_path)
-    latest_results_path.write_text(markdown_path.read_text(encoding="utf-8"), encoding="utf-8")
+    _update_latest_results(output_dir, run_stamp, markdown_path, summary_path, baseline_server_id=baseline_server)
     print(f"Wrote summary to {summary_path}")
     print(f"Wrote markdown report to {markdown_path}")
     print(f"Wrote CSV report to {csv_path}")
-    print(f"Wrote latest results to {latest_results_path}")
     return 0 if overall_success else 1
 
 
@@ -405,3 +403,43 @@ def _latest_results_path(summary_path: Path) -> Path:
         if parent.name == "results":
             return parent.parent / "latest-results.md"
     return summary_path.parent / "latest-results.md"
+
+
+def _latest_results_dir(summary_path: Path) -> Path:
+    for parent in summary_path.parents:
+        if parent.name == "results":
+            return parent.parent / "latest-results"
+    return summary_path.parent / "latest-results"
+
+
+def _update_latest_results(
+    output_dir: Path,
+    run_stamp: str,
+    markdown_path: Path,
+    summary_path: Path,
+    baseline_server_id: str | None = None,
+    title: str | None = None,
+) -> None:
+    """Copy all files from the latest run into a latest-results/ folder."""
+    latest_md = _latest_results_path(summary_path)
+    latest_dir = _latest_results_dir(summary_path)
+
+    # Clear and recreate
+    if latest_dir.exists():
+        shutil.rmtree(latest_dir)
+    latest_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy all files from this run (matching the timestamp)
+    for path in sorted(output_dir.iterdir()):
+        if path.is_file() and run_stamp in path.name:
+            shutil.copy2(path, latest_dir / path.name)
+
+    # Re-render the markdown with links to the data files in latest-results/
+    linked_md = render_markdown_report(
+        summary_path,
+        title=title,
+        baseline_server_id=baseline_server_id,
+        data_link_prefix=latest_dir.name,
+    )
+    latest_md.write_text(linked_md, encoding="utf-8")
+    print(f"Wrote latest results to {latest_dir} and {latest_md}")

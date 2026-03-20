@@ -11,19 +11,37 @@ def write_markdown_report(
     output_path: Path,
     title: str | None = None,
     baseline_server_id: str | None = None,
+    data_link_prefix: str | None = None,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(render_markdown_report(summary_path, title=title, baseline_server_id=baseline_server_id), encoding="utf-8")
+    output_path.write_text(render_markdown_report(summary_path, title=title, baseline_server_id=baseline_server_id, data_link_prefix=data_link_prefix), encoding="utf-8")
     return output_path
 
 
-def render_markdown_report(summary_path: Path, title: str | None = None, baseline_server_id: str | None = None) -> str:
+def render_markdown_report(summary_path: Path, title: str | None = None, baseline_server_id: str | None = None, data_link_prefix: str | None = None) -> str:
     summary = _read_json(summary_path)
     servers = [_load_server_entry(summary_path, entry) for entry in summary.get("servers", [])]
     baseline_server = _select_baseline_server(servers, baseline_server_id or summary.get("baseline_server"))
+    server_links = _build_server_links(summary, data_link_prefix) if data_link_prefix else {}
     if any(server["report"].get("benchmark_reports") for server in servers):
-        return _render_benchmark_report(summary_path, summary, servers, baseline_server, title=title)
-    return _render_scenario_report(summary_path, summary, servers, baseline_server, title=title)
+        return _render_benchmark_report(summary_path, summary, servers, baseline_server, title=title, server_links=server_links)
+    return _render_scenario_report(summary_path, summary, servers, baseline_server, title=title, server_links=server_links)
+
+
+def _build_server_links(summary: dict[str, Any], prefix: str) -> dict[str, str]:
+    """Map server display_name -> markdown link for per-server data files."""
+    links: dict[str, str] = {}
+    for entry in summary.get("servers", []):
+        display_name = entry.get("display_name", entry.get("id", "server"))
+        output_path = entry.get("output_path", "")
+        filename = Path(output_path).name
+        if filename:
+            links[display_name] = f"[{display_name}]({prefix}/{filename})"
+    return links
+
+
+def _linked_server_name(display_name: str, server_links: dict[str, str]) -> str:
+    return server_links.get(display_name, display_name)
 
 
 def _render_benchmark_report(
@@ -32,7 +50,10 @@ def _render_benchmark_report(
     servers: list[dict[str, Any]],
     baseline_server: dict[str, Any] | None,
     title: str | None,
+    server_links: dict[str, str] | None = None,
 ) -> str:
+    if server_links is None:
+        server_links = {}
     lines: list[str] = []
     lines.append(f"# {title or 'Python LSP Benchmark Comparison'}")
     lines.append("")
@@ -51,7 +72,7 @@ def _render_benchmark_report(
         avg_measured_ms = _mean_duration(measured_metrics)
         overview_rows.append(
             {
-                "server": server["display_name"],
+                "server": _linked_server_name(server["display_name"], server_links),
                 "success": "yes" if server["success"] else "no",
                 "benchmarks": len(benchmark_reports),
                 "total_ms": _format_float(sum(report.get("total_duration_ms", 0.0) for report in benchmark_reports)),
@@ -95,7 +116,7 @@ def _render_benchmark_report(
             avg_measured_ms = _mean_duration(measured_metrics)
             suite_rows.append(
                 {
-                    "server": server["display_name"],
+                    "server": _linked_server_name(server["display_name"], server_links),
                     "success": "yes" if suite_report.get("success") else "no",
                     "total_ms": _format_float(suite_report.get("total_duration_ms")),
                     "avg_measured_ms": _format_float(avg_measured_ms),
@@ -144,7 +165,7 @@ def _render_benchmark_report(
                     baseline_value = result_value
                 point_rows.append(
                     {
-                        "server": server["display_name"],
+                        "server": _linked_server_name(server["display_name"], server_links),
                         "success": "yes" if point.get("success") else "no",
                         "mean_ms": _format_float(point.get("summary", {}).get("mean_ms")),
                         "p95_ms": _format_float(point.get("summary", {}).get("p95_ms")),
@@ -189,7 +210,10 @@ def _render_scenario_report(
     servers: list[dict[str, Any]],
     baseline_server: dict[str, Any] | None,
     title: str | None,
+    server_links: dict[str, str] | None = None,
 ) -> str:
+    if server_links is None:
+        server_links = {}
     lines: list[str] = []
     lines.append(f"# {title or 'Python LSP Scenario Comparison'}")
     lines.append("")
@@ -207,7 +231,7 @@ def _render_scenario_report(
         avg_request_ms = _mean_duration(request_metrics)
         overview_rows.append(
             {
-                "server": server["display_name"],
+                "server": _linked_server_name(server["display_name"], server_links),
                 "success": "yes" if server["success"] else "no",
                 "scenarios": len(scenario_reports),
                 "total_ms": _format_float(sum(report.get("total_duration_ms", 0.0) for report in scenario_reports)),
@@ -257,7 +281,7 @@ def _render_scenario_report(
             if measure_label is None:
                 scenario_rows.append(
                     {
-                        "server": server["display_name"],
+                        "server": _linked_server_name(server["display_name"], server_links),
                         "success": "yes" if report.get("success") else "no",
                         "total_ms": _format_float(report.get("total_duration_ms")),
                         "avg_request_ms": _format_float(avg_request_ms),
@@ -269,7 +293,7 @@ def _render_scenario_report(
             else:
                 scenario_rows.append(
                     {
-                        "server": server["display_name"],
+                        "server": _linked_server_name(server["display_name"], server_links),
                         "success": "yes" if report.get("success") else "no",
                         "total_ms": _format_float(report.get("total_duration_ms")),
                         "avg_request_ms": _format_float(avg_request_ms),

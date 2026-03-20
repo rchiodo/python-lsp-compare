@@ -1,0 +1,120 @@
+{
+  "config_path": "github-releases",
+  "requested_servers": [
+    "pyright",
+    "ty",
+    "pyrefly"
+  ],
+  "requested_benchmarks": [
+    "data_science",
+    "django",
+    "pandas",
+    "sqlalchemy",
+    "transformers",
+    "web"
+  ],
+  "baseline_server": "pyright",
+  "generated_at": "20260320T212937Z",
+  "servers": [
+    {
+      "id": "pyright",
+      "display_name": "Pyright",
+      "output_path": "results\\bench-servers\\pyright-20260320T212937Z.json",
+      "success": true,
+      "benchmark_count": 6,
+      "command": [
+        "node",
+        "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyright\\1.1.408\\package\\dist\\pyright-langserver.js",
+        "--stdio"
+      ],
+      "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyright\\1.1.408\\package\\dist\\pyright-langserver.js",
+      "version": {
+        "kind": "git",
+        "label": "0614bff49b04",
+        "repo_root": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare",
+        "commit": "0614bff49b044d7cd5f2ab65191c711c8443d3e5",
+        "short_commit": "0614bff49b04",
+        "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyright\\1.1.408\\package\\dist\\pyright-langserver.js"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated"
+    },
+    {
+      "id": "ty",
+      "display_name": "Ty",
+      "output_path": "results\\bench-servers\\ty-20260320T212937Z.json",
+      "success": true,
+      "benchmark_count": 6,
+      "command": [
+        "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\ty\\0.0.24\\ty.exe",
+        "server"
+      ],
+      "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\ty\\0.0.24\\ty.exe",
+      "version": {
+        "kind": "git",
+        "label": "0614bff49b04",
+        "repo_root": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare",
+        "commit": "0614bff49b044d7cd5f2ab65191c711c8443d3e5",
+        "short_commit": "0614bff49b04",
+        "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\ty\\0.0.24\\ty.exe"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated"
+    },
+    {
+      "id": "pyrefly",
+      "display_name": "Pyrefly",
+      "output_path": "results\\bench-servers\\pyrefly-20260320T212937Z.json",
+      "success": true,
+      "benchmark_count": 6,
+      "command": [
+        "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyrefly\\0.57.1\\pyrefly.exe",
+        "lsp",
+        "--indexing-mode",
+        "lazy-blocking",
+        "--build-system-blocking"
+      ],
+      "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyrefly\\0.57.1\\pyrefly.exe",
+      "version": {
+        "kind": "git",
+        "label": "0614bff49b04",
+        "repo_root": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare",
+        "commit": "0614bff49b044d7cd5f2ab65191c711c8443d3e5",
+        "short_commit": "0614bff49b04",
+        "source_path": "C:\\Users\\rchiodo\\source\\repos\\python-lsp-compare\\.python-lsp-compare\\servers\\pyrefly\\0.57.1\\pyrefly.exe"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated"
+    }
+  ]
+}

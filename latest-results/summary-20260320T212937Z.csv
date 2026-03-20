@@ -1,0 +1,55 @@
+report_type,baseline_server_id,server_id,server_name,suite_name,scenario_name,point_label,method,success,mean_ms,p95_ms,non_empty_rate,result_metric_name,result_metric_label,result_metric_value,result_metric_delta,validation_passed,validation_failure_count
+benchmark,pyright,pyright,Pyright,data_science,,dataframe completion,textDocument/completion,True,7.5423400034196675,14.598400006070731,1.0,completion_item_count,Completions found,203.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,dataframe completion,textDocument/completion,True,2.535479998914525,3.1145400018431246,1.0,completion_item_count,Completions found,226.0,23.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,dataframe completion,textDocument/completion,True,2.122860006056726,3.4515000064857304,1.0,completion_item_count,Completions found,252.0,49.0,True,0
+benchmark,pyright,pyright,Pyright,data_science,,dataframe describe hover,textDocument/hover,True,1.2335000035818666,1.5935800154693425,1.0,hover_text_char_count,Hover length,4019.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,dataframe describe hover,textDocument/hover,True,0.5200200015679002,0.6384000123944134,1.0,hover_text_char_count,Hover length,3908.0,-111.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,dataframe describe hover,textDocument/hover,True,0.8145799918565899,0.8447200001683086,1.0,hover_text_char_count,Hover length,9154.0,5135.0,True,0
+benchmark,pyright,pyright,Pyright,data_science,,summarize definition,textDocument/definition,True,0.5565800121985376,0.6605800124816597,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,summarize definition,textDocument/definition,True,0.32031999435275793,0.39828000008128583,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,summarize definition,textDocument/definition,True,0.6076399877201766,1.0196199873462317,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,django,,queryset completion,textDocument/completion,True,9.118979994673282,19.40963998204097,1.0,completion_item_count,Completions found,19.8,0.0,True,0
+benchmark,pyright,ty,Ty,django,,queryset completion,textDocument/completion,True,14.456200000131503,23.106580006424338,1.0,completion_item_count,Completions found,237.0,217.2,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,queryset completion,textDocument/completion,True,1.1637399962637573,2.8440599853638555,1.0,completion_item_count,Completions found,38.0,18.2,True,0
+benchmark,pyright,pyright,Pyright,django,,queryset filter hover,textDocument/hover,True,0.7476200058590621,0.8488199964631349,1.0,hover_text_char_count,Hover length,57.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,queryset filter hover,textDocument/hover,True,0.3320000076200813,0.35792000126093626,1.0,hover_text_char_count,Hover length,46.0,-11.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,queryset filter hover,textDocument/hover,True,0.45108000631444156,0.5415200139395893,1.0,hover_text_char_count,Hover length,324.0,267.0,True,0
+benchmark,pyright,pyright,Pyright,django,,model definition,textDocument/definition,True,0.7087800011504441,0.8759000105783343,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,model definition,textDocument/definition,True,0.3639000002294779,0.4659600090235471,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,model definition,textDocument/definition,True,0.36176000139676034,0.3771799965761602,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,report dataframe completion,textDocument/completion,True,80.4217399971094,259.5303400186821,1.0,completion_item_count,Completions found,277.8,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,report dataframe completion,textDocument/completion,True,38.63415999803692,46.99178001610562,1.0,completion_item_count,Completions found,1000.0,722.2,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,report dataframe completion,textDocument/completion,True,1.1097999988123775,2.908199996454641,1.0,completion_item_count,Completions found,39.0,-238.8,True,0
+benchmark,pyright,pyright,Pyright,pandas,,dataframe groupby hover,textDocument/hover,True,1.247479993617162,1.699699996970594,1.0,hover_text_char_count,Hover length,350.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,dataframe groupby hover,textDocument/hover,True,0.4302599932998419,0.503760005813092,1.0,hover_text_char_count,Hover length,308.0,-42.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,dataframe groupby hover,textDocument/hover,True,5.482179997488856,10.124600003473459,1.0,hover_text_char_count,Hover length,3577.0,3227.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,build report definition,textDocument/definition,True,0.5461399967316538,0.6775199784897268,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,build report definition,textDocument/definition,True,0.6423800019547343,0.9319999895524232,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,build report definition,textDocument/definition,True,0.5099800007883459,0.7739800086710602,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,query completion,textDocument/completion,True,5.22736000129953,9.128320013405755,1.0,completion_item_count,Completions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,query completion,textDocument/completion,True,9.451599995372817,19.38732000417076,1.0,completion_item_count,Completions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,query completion,textDocument/completion,True,1.112860004650429,2.723079989664256,1.0,completion_item_count,Completions found,38.0,37.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,sessionmaker hover,textDocument/hover,True,1.3048199994955212,1.553739991504699,1.0,hover_text_char_count,Hover length,10572.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,sessionmaker hover,textDocument/hover,True,0.618419999955222,0.6552999897394329,1.0,hover_text_char_count,Hover length,10580.0,8.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,sessionmaker hover,textDocument/hover,True,0.8276200038380921,0.9176200022920966,1.0,hover_text_char_count,Hover length,13706.0,3134.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,mapped class definition,textDocument/definition,True,0.5287200096063316,0.5609600222669542,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,mapped class definition,textDocument/definition,True,0.3034600056707859,0.327859993558377,1.0,location_count,Definitions found,2.0,1.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,mapped class definition,textDocument/definition,True,1.4013800071552396,3.14132000785321,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,classifier pipeline completion,textDocument/completion,True,64.73359998781234,108.16780000459401,1.0,completion_item_count,Completions found,123.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,classifier pipeline completion,textDocument/completion,True,24.93035999359563,28.660419990774244,1.0,completion_item_count,Completions found,767.0,644.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,classifier pipeline completion,textDocument/completion,True,0.46460001030936837,0.4798400157596916,1.0,completion_item_count,Completions found,38.0,-85.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,pipeline hover,textDocument/hover,True,0.6715200084727257,0.9736200212500988,1.0,hover_text_char_count,Hover length,34.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,pipeline hover,textDocument/hover,True,0.27883999864570796,0.311140000121668,1.0,hover_text_char_count,Hover length,7.0,-27.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,pipeline hover,textDocument/hover,True,0.3338799928314984,0.4555999941658228,1.0,hover_text_char_count,Hover length,48.0,14.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,auto tokenizer definition,textDocument/definition,True,0.9055799979250878,1.4295400120317936,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,auto tokenizer definition,textDocument/definition,True,0.4186200036201626,0.48192000831477344,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,auto tokenizer definition,textDocument/definition,True,0.31270000035874546,0.37287999875843525,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,web,,request args completion,textDocument/completion,True,6.270740000763908,9.377479989780113,1.0,completion_item_count,Completions found,16.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,request args completion,textDocument/completion,True,14.739099994767457,25.06611998542212,1.0,completion_item_count,Completions found,439.0,423.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,request args completion,textDocument/completion,True,10.602419992210343,21.18709998321719,1.0,completion_item_count,Completions found,356.2,340.2,True,0
+benchmark,pyright,pyright,Pyright,web,,client session hover,textDocument/hover,True,0.8419800025876611,1.29937999881804,1.0,hover_text_char_count,Hover length,26.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,client session hover,textDocument/hover,True,0.2980199991725385,0.31536000897176564,1.0,hover_text_char_count,Hover length,7.0,-19.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,client session hover,textDocument/hover,True,8.632760000182316,21.72448001219891,1.0,hover_text_char_count,Hover length,340.0,314.0,True,0
+benchmark,pyright,pyright,Pyright,web,,client references,textDocument/references,True,0.895640003727749,1.0408399917650968,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,client references,textDocument/references,True,0.5685799987986684,0.6955599936190993,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,client references,textDocument/references,True,0.9533400065265596,1.2557600042782724,1.0,location_count,References found,2.0,0.0,True,0

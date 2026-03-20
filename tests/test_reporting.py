@@ -279,7 +279,9 @@ class ReportingTests(unittest.TestCase):
             self.assertIn("server_id", csv_text)
             self.assertIn("demo", csv_text)
             self.assertTrue(latest_results_path.exists())
-            self.assertEqual(latest_results_path.read_text(encoding="utf-8"), markdown)
+            latest_md = latest_results_path.read_text(encoding="utf-8")
+            self.assertIn("# Custom Comparison", latest_md)
+            self.assertIn("Demo", latest_md)
 
 
 if __name__ == "__main__":
