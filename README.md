@@ -177,8 +177,6 @@ Machine-specific server paths are kept out of the tracked repository by default.
 
 The local config is intentionally minimal: it identifies where each server executable or launcher lives on the current machine. Scenario selection, benchmark selection, benchmark environment creation, and package installation are handled by the runner so the same suite runs the same way for everyone.
 
-The loader still accepts the older `configs/local/lsp_servers.json` location as a fallback, but new setups should use `.python-lsp-compare/lsp_servers.json`.
-
 ## Setting Up Servers
 
 `run-servers`, `bench-servers`, and `list-servers` all read from `.python-lsp-compare/lsp_servers.json` by default. The easiest way to get started is:
@@ -203,7 +201,7 @@ Example config shape:
       "launch": {
         "command": "C:/Program Files/nodejs/node.exe",
         "args": [
-          "../../tools/pylance_stdio_launcher.cjs",
+          "../tools/pylance_stdio_launcher.cjs",
           "--server-path",
           "C:/path/to/pylance-server/dist/server.js"
         ]
@@ -253,7 +251,7 @@ Linux/macOS example config shape:
       "launch": {
         "command": "node",
         "args": [
-          "../../tools/pylance_stdio_launcher.cjs",
+          "../tools/pylance_stdio_launcher.cjs",
           "--server-path",
           "/home/you/src/pylance-server/dist/server.js"
         ]
@@ -311,7 +309,7 @@ On Linux or macOS, replace `node.exe` with either `node` or the absolute path to
 This repo includes [tools/pylance_stdio_launcher.cjs](tools/pylance_stdio_launcher.cjs), which wraps the Node server so it behaves like a stdio LSP process for the benchmark harness. In the config:
 
 - `launch.command` should point to `node.exe`
-- `launch.args` should point to `../../tools/pylance_stdio_launcher.cjs`
+- `launch.args` should point to `../tools/pylance_stdio_launcher.cjs`
 - `--server-path` should point to the actual Pylance `dist/server.js`
 
 ### Ty

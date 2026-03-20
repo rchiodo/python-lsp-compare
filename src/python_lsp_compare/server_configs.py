@@ -37,10 +37,6 @@ def default_local_server_config_path() -> Path:
     return Path(__file__).resolve().parents[2] / ".python-lsp-compare" / "lsp_servers.json"
 
 
-def legacy_local_server_config_path() -> Path:
-    return Path(__file__).resolve().parents[2] / "configs" / "local" / "lsp_servers.json"
-
-
 def example_server_config_path() -> Path:
     return Path(__file__).resolve().parents[2] / "configs" / "lsp_servers.example.json"
 
@@ -86,13 +82,7 @@ def _resolve_value(value: str, base_dir: Path) -> str:
 
 
 def _resolve_default_server_config_path() -> Path:
-    default_path = default_local_server_config_path().resolve()
-    if default_path.exists():
-        return default_path
-    legacy_path = legacy_local_server_config_path().resolve()
-    if legacy_path.exists():
-        return legacy_path
-    return default_path
+    return default_local_server_config_path().resolve()
 
 
 def _load_benchmark_args(item: dict[str, Any], base_dir: Path) -> list[str]:
