@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -26,6 +27,7 @@ class CallMetric:
     error_code: int | None = None
     error_message: str | None = None
     result_preview: str | None = None
+    result_summary: dict[str, Any] = field(default_factory=dict)
     context: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -156,6 +158,7 @@ def build_call_metric(
     result: Any = None,
     context: dict[str, Any] | None = None,
 ) -> CallMetric:
+    result_summary = _summarize_result(method, result) if kind == "request" and error is None else {}
     return CallMetric(
         kind=kind,
         method=method,
@@ -168,5 +171,135 @@ def build_call_metric(
         error_code=None if error is None else error.get("code"),
         error_message=None if error is None else error.get("message"),
         result_preview=_truncate(result),
+        result_summary=result_summary,
         context=context or {},
     )
+
+
+def _summarize_result(method: str, result: Any) -> dict[str, Any]:
+    summary: dict[str, Any] = {
+        "present": result is not None,
+        "empty": _is_empty_result(method, result),
+        "top_level_kind": _result_kind(result),
+        "size_chars": 0 if result is None else len(_stable_result_text(result)),
+    }
+    top_level_count = _top_level_count(result)
+    if top_level_count is not None:
+        summary["top_level_count"] = top_level_count
+
+    if method == "textDocument/completion":
+        completion_item_count = _completion_item_count(result)
+        if completion_item_count is not None:
+            summary["completion_item_count"] = completion_item_count
+    elif method == "textDocument/hover":
+        hover_text_char_count = _hover_text_char_count(result)
+        if hover_text_char_count is not None:
+            summary["hover_text_char_count"] = hover_text_char_count
+    elif method == "textDocument/documentSymbol":
+        symbol_count = _symbol_count(result)
+        if symbol_count is not None:
+            summary["symbol_count"] = symbol_count
+    elif method in {"textDocument/definition", "textDocument/references"}:
+        location_count = _location_count(result)
+        if location_count is not None:
+            summary["location_count"] = location_count
+    return summary
+
+
+def _stable_result_text(value: Any) -> str:
+    try:
+        return json.dumps(value, sort_keys=True, default=str)
+    except TypeError:
+        return repr(value)
+
+
+def _result_kind(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "list"
+    if isinstance(value, dict):
+        return "dict"
+    return type(value).__name__
+
+
+def _top_level_count(value: Any) -> int | None:
+    if isinstance(value, (str, list, dict)):
+        return len(value)
+    return None
+
+
+def _is_empty_result(method: str, result: Any) -> bool:
+    if result is None:
+        return True
+    if method == "textDocument/completion":
+        completion_item_count = _completion_item_count(result)
+        return completion_item_count == 0 if completion_item_count is not None else False
+    if method == "textDocument/hover":
+        hover_text_char_count = _hover_text_char_count(result)
+        return hover_text_char_count == 0 if hover_text_char_count is not None else False
+    if method == "textDocument/documentSymbol":
+        symbol_count = _symbol_count(result)
+        return symbol_count == 0 if symbol_count is not None else False
+    if method in {"textDocument/definition", "textDocument/references"}:
+        location_count = _location_count(result)
+        return location_count == 0 if location_count is not None else False
+    if isinstance(result, (str, list, dict)):
+        return len(result) == 0
+    return False
+
+
+def _completion_item_count(result: Any) -> int | None:
+    if isinstance(result, dict):
+        items = result.get("items")
+        if isinstance(items, list):
+            return len(items)
+    if isinstance(result, list):
+        return len(result)
+    return None
+
+
+def _hover_text_char_count(result: Any) -> int | None:
+    if not isinstance(result, dict):
+        return None
+    contents = result.get("contents")
+    return _text_length(contents)
+
+
+def _text_length(value: Any) -> int | None:
+    if value is None:
+        return 0
+    if isinstance(value, str):
+        return len(value)
+    if isinstance(value, dict):
+        if isinstance(value.get("value"), str):
+            return len(value["value"])
+        if isinstance(value.get("language"), str) and isinstance(value.get("value"), str):
+            return len(value["value"])
+        return None
+    if isinstance(value, list):
+        lengths = [item for item in (_text_length(item) for item in value) if item is not None]
+        return sum(lengths)
+    return None
+
+
+def _symbol_count(result: Any) -> int | None:
+    if isinstance(result, list):
+        return len(result)
+    return None
+
+
+def _location_count(result: Any) -> int | None:
+    if result is None:
+        return 0
+    if isinstance(result, list):
+        return len(result)
+    if isinstance(result, dict) and "uri" in result and "range" in result:
+        return 1
+    return None

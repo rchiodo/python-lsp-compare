@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 from .metrics import CallMetric, build_call_metric
 from .transport import StdioJsonRpcTransport
@@ -16,11 +17,20 @@ class LspClient:
         *,
         cwd: Path | None = None,
         env: dict[str, str] | None = None,
+        trace: Callable[[str], None] | None = None,
     ) -> None:
-        self._transport = StdioJsonRpcTransport(command, cwd=None if cwd is None else str(cwd), env=env)
+        self._transport = StdioJsonRpcTransport(
+            command,
+            cwd=None if cwd is None else str(cwd),
+            env=env,
+            request_handler=self._handle_server_request,
+            notification_handler=self._handle_server_notification,
+        )
         self._timeout_seconds = timeout_seconds
         self._next_request_id = 1
         self._metrics: list[CallMetric] = []
+        self._workspace_settings: dict[str, Any] = {}
+        self._trace = trace
 
     @property
     def metrics(self) -> list[CallMetric]:
@@ -44,6 +54,11 @@ class LspClient:
                 "clientInfo": {"name": "python-lsp-compare", "version": "0.1.0"},
                 "rootUri": workspace_path.as_uri(),
                 "capabilities": {
+                    "workspace": {
+                        "configuration": True,
+                        "workspaceFolders": True,
+                        "didChangeConfiguration": {"dynamicRegistration": False},
+                    },
                     "textDocument": {
                         "hover": {"dynamicRegistration": False},
                         "completion": {"dynamicRegistration": False},
@@ -59,11 +74,19 @@ class LspClient:
     def initialized(self) -> None:
         self.notify("initialized", {})
 
+    def did_change_configuration(self, settings: dict[str, Any], context: dict[str, Any] | None = None) -> None:
+        self._workspace_settings = settings
+        self._trace_message(
+            "workspace/didChangeConfiguration "
+            + json.dumps(settings, ensure_ascii=True, default=str, separators=(",", ":"))
+        )
+        self.notify("workspace/didChangeConfiguration", {"settings": settings}, context=context)
+
     def shutdown(self) -> dict[str, Any] | None:
-        return self.request("shutdown", {})
+        return self.request("shutdown", None)
 
     def exit(self) -> None:
-        self.notify("exit", {})
+        self.notify("exit", None)
 
     def did_open(
         self,
@@ -128,7 +151,7 @@ class LspClient:
             context=context,
         )
 
-    def request(self, method: str, params: dict[str, Any], context: dict[str, Any] | None = None) -> Any:
+    def request(self, method: str, params: dict[str, Any] | None, context: dict[str, Any] | None = None) -> Any:
         request_id = self._next_request_id
         self._next_request_id += 1
         started_at = time.time()
@@ -169,7 +192,7 @@ class LspClient:
         )
         return payload.get("result")
 
-    def notify(self, method: str, params: dict[str, Any], context: dict[str, Any] | None = None) -> None:
+    def notify(self, method: str, params: dict[str, Any] | None, context: dict[str, Any] | None = None) -> None:
         started_at = time.time()
         started_perf = time.perf_counter()
         bytes_sent = self._transport.send_notification(method, params)
@@ -186,3 +209,37 @@ class LspClient:
                 context=context,
             )
         )
+
+    def _handle_server_request(self, payload: dict[str, Any]) -> Any:
+        method = payload.get("method")
+        if method == "workspace/configuration":
+            items = payload.get("params", {}).get("items", [])
+            sections = [item.get("section") for item in items]
+            result = [self._lookup_workspace_setting(section) for section in sections]
+            self._trace_message(
+                "workspace/configuration request "
+                + json.dumps({"sections": sections, "result": result}, ensure_ascii=True, default=str, separators=(",", ":"))
+            )
+            return result
+        if method in {"client/registerCapability", "client/unregisterCapability", "window/workDoneProgress/create"}:
+            return None
+        if method == "workspace/applyEdit":
+            return {"applied": False}
+        return None
+
+    def _handle_server_notification(self, payload: dict[str, Any]) -> None:
+        return None
+
+    def _lookup_workspace_setting(self, section: str | None) -> Any:
+        if not section:
+            return self._workspace_settings
+        current: Any = self._workspace_settings
+        for part in section.split("."):
+            if not isinstance(current, dict) or part not in current:
+                return None
+            current = current[part]
+        return current
+
+    def _trace_message(self, message: str) -> None:
+        if self._trace is not None:
+            self._trace(message)

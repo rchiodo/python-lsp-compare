@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "servers": [
+    {
+      "id": "pylance",
+      "displayName": "Pylance",
+      "enabled": true,
+      "kind": "node-wrapper",
+      "sourcePath": "C:/path/to/pylance-server/dist/server.js",
+      "launch": {
+        "command": "C:/Program Files/nodejs/node.exe",
+        "args": [
+          "../../tools/pylance_stdio_launcher.cjs",
+          "--server-path",
+          "C:/path/to/pylance-server/dist/server.js"
+        ]
+      },
+      "notes": [
+        "Copy this file to configs/local/lsp_servers.json and replace placeholder paths.",
+        "The launcher script path may stay relative to the config file."
+      ]
+    },
+    {
+      "id": "ty",
+      "displayName": "Ty",
+      "enabled": true,
+      "kind": "native-exe",
+      "sourcePath": "C:/path/to/ty.exe",
+      "launch": {
+        "command": "C:/path/to/ty.exe",
+        "args": [
+          "server"
+        ]
+      },
+      "notes": [
+        "Ty uses the `server` subcommand for LSP."
+      ]
+    },
+    {
+      "id": "pyrefly",
+      "displayName": "Pyrefly",
+      "enabled": true,
+      "kind": "native-exe",
+      "sourcePath": "C:/path/to/pyrefly.exe",
+      "launch": {
+        "command": "C:/path/to/pyrefly.exe",
+        "args": [
+          "lsp"
+        ]
+          ]
+          "--build-system-blocking"
+        ]
+      ]
+    }
+  ]
+}

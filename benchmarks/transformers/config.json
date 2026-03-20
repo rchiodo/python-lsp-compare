@@ -1,0 +1,32 @@
+{
+  "name": "transformers",
+  "description": "Benchmark Hugging Face transformers pipelines and model typing surfaces.",
+  "workspace_dir": "src",
+  "requirements_file": "requirements.txt",
+  "iterations": 5,
+  "warmup_iterations": 1,
+  "hover_points": [
+    {
+      "label": "pipeline hover",
+      "file": "src/inference.py",
+      "line": 9,
+      "character": 18
+    }
+  ],
+  "completion_points": [
+    {
+      "label": "tokenizer factory completion",
+      "file": "src/inference.py",
+      "line": 7,
+      "character": 30
+    }
+  ],
+  "goto_definition_points": [
+    {
+      "label": "auto tokenizer definition",
+      "file": "src/inference.py",
+      "line": 7,
+      "character": 17
+    }
+  ]
+}

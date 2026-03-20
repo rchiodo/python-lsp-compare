@@ -1,0 +1,32 @@
+{
+  "name": "django",
+  "description": "Benchmark Django model, queryset, and admin-oriented application code.",
+  "workspace_dir": "src",
+  "requirements_file": "requirements.txt",
+  "iterations": 5,
+  "warmup_iterations": 1,
+  "hover_points": [
+    {
+      "label": "queryset filter hover",
+      "file": "src/blog.py",
+      "line": 18,
+      "character": 23
+    }
+  ],
+  "completion_points": [
+    {
+      "label": "queryset completion",
+      "file": "src/blog.py",
+      "line": 20,
+      "character": 20
+    }
+  ],
+  "goto_definition_points": [
+    {
+      "label": "model definition",
+      "file": "src/blog.py",
+      "line": 19,
+      "character": 14
+    }
+  ]
+}

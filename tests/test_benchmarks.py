@@ -1,19 +1,39 @@
 from __future__ import annotations
 
+import io
 import json
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from python_lsp_compare.benchmark_suites import discover_benchmark_suites
+from python_lsp_compare.environments import cleanup_benchmark_environment, prepare_benchmark_environment
 from python_lsp_compare.cli import main
 from python_lsp_compare.runner import run_benchmarks
 
 
 class BenchmarkSuiteTests(unittest.TestCase):
+    def test_discover_bundled_benchmark_suites(self) -> None:
+        suites = discover_benchmark_suites()
+        self.assertTrue({"sqlalchemy", "web", "data_science", "django", "pandas", "transformers"}.issubset(suites))
+
+        django_suite = suites["django"]
+        self.assertEqual(django_suite.requirements_file.name, "requirements.txt")
+        self.assertIn("textDocument/hover", django_suite.points_by_method)
+        self.assertIn("textDocument/completion", django_suite.points_by_method)
+        self.assertIn("textDocument/definition", django_suite.points_by_method)
+
+        pandas_suite = suites["pandas"]
+        self.assertIn("textDocument/documentSymbol", pandas_suite.points_by_method)
+
+        transformers_suite = suites["transformers"]
+        self.assertIn("textDocument/hover", transformers_suite.points_by_method)
+        self.assertIn("textDocument/completion", transformers_suite.points_by_method)
+
     def test_discover_benchmark_suite(self) -> None:
         suites = discover_benchmark_suites(Path(__file__).parent / "fixtures")
         self.assertIn("fixture_suite", suites)
@@ -41,6 +61,70 @@ class BenchmarkSuiteTests(unittest.TestCase):
         self.assertEqual(hover_point.measured_iterations, 2)
         self.assertEqual(hover_point.warmup_iterations, 1)
         self.assertEqual(hover_point.summary["request_count"], 2)
+        self.assertEqual(hover_point.summary["result_summary"]["non_empty_count"], 2)
+        self.assertEqual(hover_point.summary["result_summary"]["metrics"]["hover_text_char_count"]["mean"], 10.0)
+
+        completion_point = next(point for point in suite_report.points if point.method == "textDocument/completion")
+        self.assertEqual(completion_point.summary["result_summary"]["metrics"]["completion_item_count"]["mean"], 1.0)
+
+    def test_prepare_benchmark_environment_writes_pyrightconfig_for_suite_venv(self) -> None:
+        suite = discover_benchmark_suites(Path(__file__).parent / "fixtures")["fixture_suite"]
+        environment = prepare_benchmark_environment(
+            suite=suite,
+            command=[sys.executable],
+            environment_mode="isolated",
+            base_python_executable=sys.executable,
+            install_requirements=True,
+        )
+        try:
+            config_path = suite.root_path / "pyrightconfig.json"
+            self.assertTrue(config_path.exists())
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            self.assertEqual(config["venv"], ".venv")
+            self.assertEqual(config["venvPath"], ".")
+            self.assertEqual(config["include"], ["src"])
+            self.assertEqual(environment.workspace_root, suite.root_path)
+            self.assertEqual(environment.workspace_settings["python"]["venv"], ".venv")
+            self.assertEqual(environment.workspace_settings["python"]["pythonPath"], environment.python_executable)
+        finally:
+            cleanup_benchmark_environment(environment)
+            self.assertFalse((suite.root_path / "pyrightconfig.json").exists())
+
+    def test_prepare_benchmark_environment_current_mode_sets_python_path(self) -> None:
+        suite = discover_benchmark_suites(Path(__file__).parent / "fixtures")["fixture_suite"]
+        environment = prepare_benchmark_environment(
+            suite=suite,
+            command=[sys.executable],
+            environment_mode="current",
+            base_python_executable=sys.executable,
+            install_requirements=False,
+        )
+        self.assertEqual(environment.workspace_settings["python"]["pythonPath"], sys.executable)
+        self.assertEqual(environment.workspace_settings["python"]["defaultInterpreterPath"], sys.executable)
+
+    def test_run_benchmark_suite_handles_workspace_configuration_request(self) -> None:
+        server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_capture = Path(temp_dir) / "workspace-config.json"
+            report = run_benchmarks(
+                command=[
+                    sys.executable,
+                    str(server_script),
+                    "--request-workspace-config-output",
+                    str(config_capture),
+                ],
+                benchmark_names=["fixture_suite"],
+                benchmark_root=Path(__file__).parent / "fixtures",
+                timeout_seconds=2.0,
+                environment_mode="isolated",
+            )
+
+            suite_report = report.benchmark_reports[0]
+            self.assertTrue(suite_report.success)
+            response = json.loads(config_capture.read_text(encoding="utf-8"))
+            self.assertEqual(response[0]["pythonPath"], suite_report.python_executable)
+            self.assertEqual(response[1], suite_report.python_executable)
+            self.assertEqual(response[2], suite_report.python_executable)
 
     def test_run_benchmark_cli_writes_report(self) -> None:
         server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
@@ -55,8 +139,6 @@ class BenchmarkSuiteTests(unittest.TestCase):
                     str(server_script),
                     "--benchmark-root",
                     str(Path(__file__).parent / "fixtures"),
-                    "--benchmark",
-                    "fixture_suite",
                     "--output",
                     str(output_path),
                 ]
@@ -66,6 +148,78 @@ class BenchmarkSuiteTests(unittest.TestCase):
             self.assertEqual(report["requested_benchmarks"], ["fixture_suite"])
             self.assertEqual(report["benchmark_reports"][0]["name"], "fixture_suite")
             self.assertTrue(report["benchmark_reports"][0]["success"])
+
+    def test_run_benchmark_cli_logs_workspace_configuration_requests(self) -> None:
+        server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "benchmarks.json"
+            config_capture = Path(temp_dir) / "workspace-config.json"
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "run-benchmark",
+                        "--server-command",
+                        sys.executable,
+                        "--server-arg",
+                        str(server_script),
+                        "--server-arg=--request-workspace-config-output",
+                        "--server-arg",
+                        str(config_capture),
+                        "--benchmark-root",
+                        str(Path(__file__).parent / "fixtures"),
+                        "--output",
+                        str(output_path),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            output = stdout.getvalue()
+            self.assertIn("workspace/didChangeConfiguration", output)
+            self.assertIn("workspace/configuration request", output)
+
+    def test_benchmark_validation_fails_on_empty_results(self) -> None:
+        server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            suite_root = temp_path / "invalid_suite"
+            source_dir = suite_root / "src"
+            source_dir.mkdir(parents=True, exist_ok=True)
+            (source_dir / "app.py").write_text("value = 1\nvalue\n", encoding="utf-8")
+            (suite_root / "config.json").write_text(
+                json.dumps(
+                    {
+                        "name": "invalid_suite",
+                        "workspace_dir": "src",
+                        "iterations": 2,
+                        "warmup_iterations": 1,
+                        "completion_points": [
+                            {
+                                "label": "completion validation",
+                                "file": "src/app.py",
+                                "line": 1,
+                                "character": 3,
+                                "validation": {"minCompletionItems": 1},
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = run_benchmarks(
+                command=[sys.executable, str(server_script), "--completion-items", "0"],
+                benchmark_names=["invalid_suite"],
+                benchmark_root=temp_path,
+                timeout_seconds=2.0,
+            )
+
+            suite_report = report.benchmark_reports[0]
+            self.assertFalse(suite_report.success)
+            point_report = suite_report.points[0]
+            self.assertFalse(point_report.success)
+            self.assertFalse(point_report.summary["validation"]["passed"])
+            self.assertIn("completion_item_count=0", point_report.error_message)
 
     def test_isolated_environment_creates_suite_venv_and_rewrites_python_command(self) -> None:
         server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"

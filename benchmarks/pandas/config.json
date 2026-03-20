@@ -1,0 +1,32 @@
+{
+  "name": "pandas",
+  "description": "Benchmark pandas-heavy dataframe reshaping and indexing code.",
+  "workspace_dir": "src",
+  "requirements_file": "requirements.txt",
+  "iterations": 5,
+  "warmup_iterations": 1,
+  "hover_points": [
+    {
+      "label": "dataframe groupby hover",
+      "file": "src/report.py",
+      "line": 11,
+      "character": 20
+    }
+  ],
+  "completion_points": [
+    {
+      "label": "series completion",
+      "file": "src/report.py",
+      "line": 17,
+      "character": 17
+    }
+  ],
+  "document_symbol_points": [
+    {
+      "label": "module symbols",
+      "file": "src/report.py",
+      "line": 0,
+      "character": 0
+    }
+  ]
+}

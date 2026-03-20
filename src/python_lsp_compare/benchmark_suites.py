@@ -17,11 +17,22 @@ METHOD_CONFIG_KEYS: dict[str, str] = {
 
 
 @dataclass(slots=True)
+class BenchmarkValidation:
+    require_non_empty: bool | None = None
+    min_completion_items: int | None = None
+    min_hover_text_chars: int | None = None
+    min_symbol_count: int | None = None
+    min_location_count: int | None = None
+    min_size_chars: int | None = None
+
+
+@dataclass(slots=True)
 class BenchmarkPoint:
     label: str
     file_path: Path
     line: int
     character: int
+    validation: BenchmarkValidation = field(default_factory=BenchmarkValidation)
 
 
 @dataclass(slots=True)
@@ -84,6 +95,18 @@ def _load_point(data: dict[str, Any], suite_root: Path) -> BenchmarkPoint:
         file_path=_resolve_point_path(suite_root, data["file"]),
         line=int(data["line"]),
         character=int(data["character"]),
+        validation=_load_validation(data.get("validation", {})),
+    )
+
+
+def _load_validation(data: dict[str, Any]) -> BenchmarkValidation:
+    return BenchmarkValidation(
+        require_non_empty=_read_optional_bool(data.get("requireNonEmpty")),
+        min_completion_items=_read_optional_int(data.get("minCompletionItems")),
+        min_hover_text_chars=_read_optional_int(data.get("minHoverTextChars")),
+        min_symbol_count=_read_optional_int(data.get("minSymbolCount")),
+        min_location_count=_read_optional_int(data.get("minLocationCount")),
+        min_size_chars=_read_optional_int(data.get("minSizeChars")),
     )
 
 
@@ -100,3 +123,15 @@ def _pick(data: dict[str, Any], *keys: str, default: Any) -> Any:
         if key in data:
             return data[key]
     return default
+
+
+def _read_optional_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
+def _read_optional_bool(value: Any) -> bool | None:
+    if value is None:
+        return None
+    return bool(value)

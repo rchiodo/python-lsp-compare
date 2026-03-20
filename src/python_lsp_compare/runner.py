@@ -6,10 +6,10 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
-from .benchmark_suites import BenchmarkPoint, BenchmarkSuite, discover_benchmark_suites
-from .environments import prepare_benchmark_environment
+from .benchmark_suites import BenchmarkPoint, BenchmarkSuite, BenchmarkValidation, discover_benchmark_suites
+from .environments import cleanup_benchmark_environment, prepare_benchmark_environment
 from .lsp_client import LspClient
 from .metrics import BenchmarkPointReport, BenchmarkSuiteReport, CallMetric, RunReport, ScenarioReport
 from .scenarios.base import SAMPLE_SOURCE, ScenarioContext
@@ -52,6 +52,7 @@ def run_benchmarks(
     python_executable: str | None = None,
     environment_mode: str = "current",
     environment_root: Path | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> RunReport:
     suites = discover_benchmark_suites(benchmark_root)
     selected_names = list(benchmark_names or suites.keys())
@@ -60,18 +61,20 @@ def run_benchmarks(
         raise ValueError(f"Unknown benchmarks: {', '.join(unknown)}")
 
     started_at = time.time()
-    benchmark_reports = [
-        _run_single_benchmark_suite(
-            command=command,
-            suite=suites[name],
-            timeout_seconds=timeout_seconds,
-            install_requirements=install_requirements,
-            python_executable=python_executable or sys.executable,
-            environment_mode=environment_mode,
-            environment_root=environment_root,
+    benchmark_reports: list[BenchmarkSuiteReport] = []
+    for name in selected_names:
+        benchmark_reports.append(
+            _run_single_benchmark_suite(
+                command=command,
+                suite=suites[name],
+                timeout_seconds=timeout_seconds,
+                install_requirements=install_requirements,
+                python_executable=python_executable or sys.executable,
+                environment_mode=environment_mode,
+                environment_root=environment_root,
+                progress=progress,
+            )
         )
-        for name in selected_names
-    ]
     return RunReport(
         server_command=list(command),
         requested_scenarios=[],
@@ -139,8 +142,10 @@ def _run_single_benchmark_suite(
     python_executable: str,
     environment_mode: str,
     environment_root: Path | None,
+    progress: Callable[[str], None] | None,
 ) -> BenchmarkSuiteReport:
     started_perf = time.perf_counter()
+    _emit_progress(progress, f"[{suite.name}] preparing benchmark environment")
     benchmark_environment = prepare_benchmark_environment(
         suite=suite,
         command=command,
@@ -148,6 +153,7 @@ def _run_single_benchmark_suite(
         base_python_executable=python_executable,
         install_requirements=install_requirements,
         environment_root=environment_root,
+        logger=progress,
     )
 
     client = LspClient(
@@ -155,14 +161,22 @@ def _run_single_benchmark_suite(
         timeout_seconds=timeout_seconds,
         cwd=suite.root_path,
         env=benchmark_environment.process_env,
+        trace=progress,
     )
     client.start()
     error_message: str | None = None
     point_reports: list[BenchmarkPointReport] = []
     success = True
     try:
-        client.initialize(suite.workspace_dir)
+        _emit_progress(progress, f"[{suite.name}] initialize")
+        client.initialize(benchmark_environment.workspace_root)
         client.initialized()
+        _emit_progress(progress, f"[{suite.name}] send workspace configuration")
+        client.did_change_configuration(
+            benchmark_environment.workspace_settings,
+            context={"suite": suite.name, "phase": "setup"},
+        )
+        _emit_progress(progress, f"[{suite.name}] open benchmark documents")
         opened = _open_benchmark_documents(client, suite)
         try:
             for method, points in suite.points_by_method.items():
@@ -173,6 +187,7 @@ def _run_single_benchmark_suite(
                             suite=suite,
                             method=method,
                             point=point,
+                            progress=progress,
                         )
                     )
         finally:
@@ -189,8 +204,10 @@ def _run_single_benchmark_suite(
         except Exception:
             pass
         client.close()
+        cleanup_benchmark_environment(benchmark_environment)
     if client.stderr_lines and error_message is not None:
         error_message = f"{error_message}\n--- server stderr ---\n" + "\n".join(client.stderr_lines)
+    _emit_progress(progress, f"[{suite.name}] {'ok' if success else 'failed'}")
     return BenchmarkSuiteReport(
         name=suite.name,
         description=suite.description,
@@ -215,11 +232,13 @@ def _run_benchmark_point(
     suite: BenchmarkSuite,
     method: str,
     point: BenchmarkPoint,
+    progress: Callable[[str], None] | None,
 ) -> BenchmarkPointReport:
     metrics: list[CallMetric] = []
     error_message: str | None = None
     success = True
     uri = point.file_path.as_uri()
+    _emit_progress(progress, f"[{suite.name}] {point.label} start ({method})")
     for iteration in range(suite.warmup_iterations + suite.iterations):
         is_warmup = iteration < suite.warmup_iterations
         before = len(client.metrics)
@@ -237,10 +256,22 @@ def _run_benchmark_point(
         except Exception as exc:
             success = False
             error_message = str(exc)
+            _emit_progress(progress, f"[{suite.name}] {point.label} request failed: {error_message}")
             break
         metrics.extend(client.metrics[before:])
 
     measured_metrics = [metric for metric in metrics if metric.context.get("phase") == "measured" and metric.kind == "request"]
+    validation_summary = _validate_benchmark_point_results(method, point.validation, measured_metrics)
+    if not validation_summary["passed"]:
+        success = False
+        error_message = _combine_error_messages(error_message, validation_summary["message"])
+    summary = _summarize_metrics(measured_metrics)
+    summary["validation"] = validation_summary
+    _emit_progress(
+        progress,
+        f"[{suite.name}] {point.label} {'ok' if success else 'failed'}"
+        + (f": {error_message}" if error_message else ""),
+    )
     return BenchmarkPointReport(
         label=point.label,
         method=method,
@@ -251,7 +282,7 @@ def _run_benchmark_point(
         warmup_iterations=suite.warmup_iterations,
         measured_iterations=suite.iterations,
         metrics=metrics,
-        summary=_summarize_metrics(measured_metrics),
+        summary=summary,
         error_message=error_message,
     )
 
@@ -302,13 +333,18 @@ def _summarize_benchmark_suite(points: Sequence[BenchmarkPointReport], metrics: 
         method: _summarize_values(value["durations_ms"], extra={"point_count": value["point_count"]})
         for method, value in by_method.items()
     }
+    summary["validation"] = {
+        "point_count": len(points),
+        "passed_point_count": len([point for point in points if point.summary.get("validation", {}).get("passed")]),
+        "failed_point_count": len([point for point in points if not point.summary.get("validation", {}).get("passed", True)]),
+    }
     return summary
 
 
 def _summarize_metrics(metrics: Sequence[CallMetric]) -> dict[str, object]:
     request_metrics = [metric for metric in metrics if metric.kind == "request"]
     durations = [metric.duration_ms for metric in request_metrics]
-    return _summarize_values(
+    summary = _summarize_values(
         durations,
         extra={
             "request_count": len(request_metrics),
@@ -319,6 +355,8 @@ def _summarize_metrics(metrics: Sequence[CallMetric]) -> dict[str, object]:
             "bytes_received": sum(metric.bytes_received for metric in metrics),
         },
     )
+    summary["result_summary"] = _summarize_result_metrics(request_metrics)
+    return summary
 
 
 def _summarize_values(values: Sequence[float], extra: dict[str, object] | None = None) -> dict[str, object]:
@@ -337,6 +375,136 @@ def _summarize_values(values: Sequence[float], extra: dict[str, object] | None =
         }
     )
     return summary
+
+
+def _summarize_result_metrics(metrics: Sequence[CallMetric]) -> dict[str, object]:
+    result_metrics = [metric for metric in metrics if metric.result_summary]
+    present_count = len([metric for metric in result_metrics if metric.result_summary.get("present")])
+    empty_count = len([metric for metric in result_metrics if metric.result_summary.get("empty")])
+    non_empty_count = len([metric for metric in result_metrics if metric.result_summary.get("present") and not metric.result_summary.get("empty")])
+
+    numeric_fields: dict[str, list[float]] = {}
+    for metric in result_metrics:
+        for key, value in metric.result_summary.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            numeric_fields.setdefault(key, []).append(float(value))
+
+    return {
+        "present_count": present_count,
+        "empty_count": empty_count,
+        "non_empty_count": non_empty_count,
+        "non_empty_rate": None if present_count == 0 else non_empty_count / present_count,
+        "metrics": {
+            key: _summarize_numeric_values(values)
+            for key, values in sorted(numeric_fields.items())
+        },
+    }
+
+
+def _summarize_numeric_values(values: Sequence[float]) -> dict[str, float | None]:
+    if not values:
+        return {"min": None, "max": None, "mean": None, "median": None, "p95": None}
+    sorted_values = sorted(values)
+    return {
+        "min": min(sorted_values),
+        "max": max(sorted_values),
+        "mean": statistics.fmean(sorted_values),
+        "median": statistics.median(sorted_values),
+        "p95": _percentile(sorted_values, 0.95),
+    }
+
+
+def _validate_benchmark_point_results(
+    method: str,
+    validation: BenchmarkValidation,
+    measured_metrics: Sequence[CallMetric],
+) -> dict[str, object]:
+    thresholds = _effective_validation_thresholds(method, validation)
+    failures: list[str] = []
+    checked_metrics = 0
+    for metric in measured_metrics:
+        checked_metrics += 1
+        result_summary = metric.result_summary
+        if thresholds["require_non_empty"] and result_summary.get("empty"):
+            failures.append(f"iteration {metric.context.get('iteration', '?')}: empty result")
+        if not _passes_numeric_threshold(result_summary.get("completion_item_count"), thresholds["min_completion_items"]):
+            failures.append(
+                f"iteration {metric.context.get('iteration', '?')}: completion_item_count={result_summary.get('completion_item_count')} < {thresholds['min_completion_items']}"
+            )
+        if not _passes_numeric_threshold(result_summary.get("hover_text_char_count"), thresholds["min_hover_text_chars"]):
+            failures.append(
+                f"iteration {metric.context.get('iteration', '?')}: hover_text_char_count={result_summary.get('hover_text_char_count')} < {thresholds['min_hover_text_chars']}"
+            )
+        if not _passes_numeric_threshold(result_summary.get("symbol_count"), thresholds["min_symbol_count"]):
+            failures.append(
+                f"iteration {metric.context.get('iteration', '?')}: symbol_count={result_summary.get('symbol_count')} < {thresholds['min_symbol_count']}"
+            )
+        if not _passes_numeric_threshold(result_summary.get("location_count"), thresholds["min_location_count"]):
+            failures.append(
+                f"iteration {metric.context.get('iteration', '?')}: location_count={result_summary.get('location_count')} < {thresholds['min_location_count']}"
+            )
+        if not _passes_numeric_threshold(result_summary.get("size_chars"), thresholds["min_size_chars"]):
+            failures.append(
+                f"iteration {metric.context.get('iteration', '?')}: size_chars={result_summary.get('size_chars')} < {thresholds['min_size_chars']}"
+            )
+    message = None if not failures else "Result validation failed: " + "; ".join(failures)
+    return {
+        "passed": not failures,
+        "checked_iterations": checked_metrics,
+        "failure_count": len(failures),
+        "message": message,
+        "rules": thresholds,
+    }
+
+
+def _effective_validation_thresholds(method: str, validation: BenchmarkValidation) -> dict[str, int | bool | None]:
+    thresholds: dict[str, int | bool | None] = {
+        "require_non_empty": validation.require_non_empty,
+        "min_completion_items": validation.min_completion_items,
+        "min_hover_text_chars": validation.min_hover_text_chars,
+        "min_symbol_count": validation.min_symbol_count,
+        "min_location_count": validation.min_location_count,
+        "min_size_chars": validation.min_size_chars,
+    }
+    if method == "textDocument/completion" and thresholds["min_completion_items"] is None:
+        thresholds["min_completion_items"] = 1
+    if method == "textDocument/hover" and thresholds["min_hover_text_chars"] is None:
+        thresholds["min_hover_text_chars"] = 1
+    if method == "textDocument/documentSymbol" and thresholds["min_symbol_count"] is None:
+        thresholds["min_symbol_count"] = 1
+    if method in {"textDocument/definition", "textDocument/references"} and thresholds["min_location_count"] is None:
+        thresholds["min_location_count"] = 1
+    if thresholds["require_non_empty"] is None:
+        thresholds["require_non_empty"] = method in {
+            "textDocument/completion",
+            "textDocument/hover",
+            "textDocument/documentSymbol",
+            "textDocument/definition",
+            "textDocument/references",
+        }
+    return thresholds
+
+
+def _passes_numeric_threshold(value: object, minimum: int | bool | None) -> bool:
+    if minimum is None:
+        return True
+    if isinstance(minimum, bool):
+        return True
+    if not isinstance(value, (int, float)):
+        return False
+    return float(value) >= float(minimum)
+
+
+def _combine_error_messages(existing: str | None, new_message: str | None) -> str | None:
+    if existing and new_message:
+        return f"{existing}; {new_message}"
+    return existing or new_message
+
+
+def _emit_progress(progress: Callable[[str], None] | None, message: str) -> None:
+    if progress is not None:
+        progress(message)
 
 
 def _percentile(sorted_values: Sequence[float], percentile: float) -> float:

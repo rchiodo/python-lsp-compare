@@ -7,10 +7,10 @@
   "warmup_iterations": 1,
   "hover_points": [
     {
-      "label": "dataframe hover",
+      "label": "dataframe describe hover",
       "file": "src/analysis.py",
-      "line": 7,
-      "character": 10
+      "line": 6,
+      "character": 19
     }
   ],
   "completion_points": [

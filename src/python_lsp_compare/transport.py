@@ -6,7 +6,7 @@ import subprocess
 import threading
 from dataclasses import dataclass
 from queue import Queue
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 
 class JsonRpcTransportError(RuntimeError):
@@ -21,7 +21,15 @@ class JsonRpcResponse:
 
 
 class StdioJsonRpcTransport:
-    def __init__(self, command: Sequence[str], *, cwd: str | None = None, env: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        command: Sequence[str],
+        *,
+        cwd: str | None = None,
+        env: dict[str, str] | None = None,
+        request_handler: Callable[[dict[str, Any]], Any] | None = None,
+        notification_handler: Callable[[dict[str, Any]], None] | None = None,
+    ) -> None:
         if not command:
             raise ValueError("command must not be empty")
         self._command = list(command)
@@ -34,6 +42,8 @@ class StdioJsonRpcTransport:
         self._stderr_thread: threading.Thread | None = None
         self._closed = threading.Event()
         self._stderr_lines: list[str] = []
+        self._request_handler = request_handler
+        self._notification_handler = notification_handler
 
     @property
     def stderr_lines(self) -> list[str]:
@@ -61,7 +71,10 @@ class StdioJsonRpcTransport:
         if process is None:
             return
         if process.stdin is not None and not process.stdin.closed:
-            process.stdin.close()
+            try:
+                process.stdin.close()
+            except OSError:
+                pass
         if process.poll() is None:
             process.terminate()
             try:
@@ -70,18 +83,31 @@ class StdioJsonRpcTransport:
                 process.kill()
                 process.wait(timeout=2)
         if process.stdout is not None and not process.stdout.closed:
-            process.stdout.close()
+            try:
+                process.stdout.close()
+            except OSError:
+                pass
         if process.stderr is not None and not process.stderr.closed:
-            process.stderr.close()
+            try:
+                process.stderr.close()
+            except OSError:
+                pass
         self._process = None
 
-    def send_request(self, request_id: int, method: str, params: dict[str, Any], timeout_seconds: float) -> JsonRpcResponse:
+    def send_request(
+        self,
+        request_id: int,
+        method: str,
+        params: dict[str, Any] | None,
+        timeout_seconds: float,
+    ) -> JsonRpcResponse:
         payload = {
             "jsonrpc": "2.0",
             "id": request_id,
             "method": method,
-            "params": params,
         }
+        if params is not None:
+            payload["params"] = params
         response_queue: Queue[JsonRpcResponse] = Queue(maxsize=1)
         with self._pending_lock:
             self._pending[request_id] = response_queue
@@ -97,12 +123,13 @@ class StdioJsonRpcTransport:
             with self._pending_lock:
                 self._pending.pop(request_id, None)
 
-    def send_notification(self, method: str, params: dict[str, Any]) -> int:
+    def send_notification(self, method: str, params: dict[str, Any] | None) -> int:
         payload = {
             "jsonrpc": "2.0",
             "method": method,
-            "params": params,
         }
+        if params is not None:
+            payload["params"] = params
         return self.send_message(payload)
 
     def send_message(self, payload: dict[str, Any]) -> int:
@@ -144,6 +171,10 @@ class StdioJsonRpcTransport:
                 raw_size = sum(len(item) for item in headers) + len(body)
                 if "id" in payload and ("result" in payload or "error" in payload):
                     self._dispatch_response(payload, raw_size)
+                elif "method" in payload and "id" in payload:
+                    self._handle_server_request(payload)
+                elif "method" in payload:
+                    self._handle_server_notification(payload)
         finally:
             self._closed.set()
 
@@ -162,6 +193,27 @@ class StdioJsonRpcTransport:
             queue = self._pending.get(payload["id"])
         if queue is not None:
             queue.put(JsonRpcResponse(payload=payload, raw_size=raw_size, request_size=0))
+
+    def _handle_server_request(self, payload: dict[str, Any]) -> None:
+        if self._request_handler is None:
+            self.send_message({"jsonrpc": "2.0", "id": payload["id"], "result": None})
+            return
+        try:
+            result = self._request_handler(payload)
+            self.send_message({"jsonrpc": "2.0", "id": payload["id"], "result": result})
+        except Exception as exc:
+            self.send_message(
+                {
+                    "jsonrpc": "2.0",
+                    "id": payload["id"],
+                    "error": {"code": -32603, "message": str(exc)},
+                }
+            )
+
+    def _handle_server_notification(self, payload: dict[str, Any]) -> None:
+        if self._notification_handler is None:
+            return
+        self._notification_handler(payload)
 
     @staticmethod
     def _parse_content_length(header_lines: list[bytes]) -> int:

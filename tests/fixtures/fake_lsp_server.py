@@ -10,6 +10,12 @@ from typing import Any
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--write-env")
+    parser.add_argument("--hover-text", default="Fake hover")
+    parser.add_argument("--completion-items", type=int, default=1)
+    parser.add_argument("--definition-count", type=int, default=1)
+    parser.add_argument("--reference-count", type=int, default=1)
+    parser.add_argument("--symbol-count", type=int, default=1)
+    parser.add_argument("--request-workspace-config-output")
     return parser.parse_args()
 
 
@@ -40,7 +46,7 @@ def write_message(payload: dict[str, Any]) -> None:
     sys.stdout.buffer.flush()
 
 
-def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
+def handle_request(message: dict[str, Any], args: argparse.Namespace) -> dict[str, Any] | None:
     request_id = message.get("id")
     method = message.get("method")
     if method == "initialize":
@@ -61,13 +67,16 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
         return {
             "jsonrpc": "2.0",
             "id": request_id,
-            "result": {"contents": {"kind": "plaintext", "value": "Fake hover"}},
+            "result": {"contents": {"kind": "plaintext", "value": args.hover_text}},
         }
     if method == "textDocument/completion":
         return {
             "jsonrpc": "2.0",
             "id": request_id,
-            "result": {"isIncomplete": False, "items": [{"label": "greet", "kind": 2}]},
+            "result": {
+                "isIncomplete": False,
+                "items": [{"label": f"greet{index}", "kind": 2} for index in range(args.completion_items)],
+            },
         }
     if method == "textDocument/documentSymbol":
         return {
@@ -75,7 +84,7 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
             "id": request_id,
             "result": [
                 {
-                    "name": "Greeter",
+                    "name": f"Greeter{index}",
                     "kind": 5,
                     "range": {
                         "start": {"line": 0, "character": 0},
@@ -86,19 +95,24 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
                         "end": {"line": 0, "character": 7},
                     },
                 }
+                for index in range(args.symbol_count)
             ],
         }
     if method == "textDocument/definition":
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {
+        locations = [
+            {
                 "uri": message["params"]["textDocument"]["uri"],
                 "range": {
                     "start": {"line": 0, "character": 0},
                     "end": {"line": 0, "character": 7},
                 },
-            },
+            }
+            for _ in range(args.definition_count)
+        ]
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": locations[0] if len(locations) == 1 else locations,
         }
     if method == "textDocument/references":
         return {
@@ -112,13 +126,42 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
                         "end": {"line": 0, "character": 7},
                     },
                 }
+                for _ in range(args.reference_count)
             ],
         }
     return {"jsonrpc": "2.0", "id": request_id, "result": None}
 
 
+def request_workspace_configuration(output_path: str) -> None:
+    request_id = 9000
+    write_message(
+        {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "workspace/configuration",
+            "params": {
+                "items": [
+                    {"section": "python"},
+                    {"section": "python.pythonPath"},
+                    {"section": "python.defaultInterpreterPath"},
+                ]
+            },
+        }
+    )
+    while True:
+        response = read_message()
+        if response is None:
+            raise RuntimeError("client closed before replying to workspace/configuration")
+        if response.get("id") != request_id:
+            continue
+        with open(output_path, "w", encoding="utf-8") as handle:
+            json.dump(response.get("result"), handle, indent=2)
+        return
+
+
 def main() -> int:
     args = parse_args()
+    requested_workspace_config = False
     if args.write_env:
         with open(args.write_env, "w", encoding="utf-8") as handle:
             json.dump(
@@ -134,7 +177,14 @@ def main() -> int:
         message = read_message()
         if message is None:
             return 0
-        response = handle_request(message)
+        if (
+            message.get("method") == "workspace/didChangeConfiguration"
+            and args.request_workspace_config_output
+            and not requested_workspace_config
+        ):
+            request_workspace_configuration(args.request_workspace_config_output)
+            requested_workspace_config = True
+        response = handle_request(message, args)
         if response is not None:
             write_message(response)
         if message.get("method") == "exit":
