@@ -1,0 +1,162 @@
+{
+  "config_path": "github-releases",
+  "requested_servers": [
+    "pyright",
+    "ty",
+    "pyrefly",
+    "pylsp-mypy"
+  ],
+  "requested_benchmarks": [
+    "data_science",
+    "django",
+    "pandas",
+    "sqlalchemy",
+    "transformers",
+    "web"
+  ],
+  "baseline_server": "pyright",
+  "generated_at": "20260321T001740Z",
+  "servers": [
+    {
+      "id": "pyright",
+      "display_name": "Pyright",
+      "output_path": "results/bench-servers/pyright-20260321T001740Z.json",
+      "success": false,
+      "benchmark_count": 6,
+      "command": [
+        "node",
+        "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyright/1.1.408/package/dist/pyright-langserver.js",
+        "--stdio"
+      ],
+      "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyright/1.1.408/package/dist/pyright-langserver.js",
+      "version": {
+        "kind": "release",
+        "label": "1.1.408",
+        "repo_root": null,
+        "commit": null,
+        "short_commit": null,
+        "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyright/1.1.408/package/dist/pyright-langserver.js"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated",
+      "notes": [
+        "Requires Node.js to be installed."
+      ]
+    },
+    {
+      "id": "ty",
+      "display_name": "Ty",
+      "output_path": "results/bench-servers/ty-20260321T001740Z.json",
+      "success": true,
+      "benchmark_count": 6,
+      "command": [
+        "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/ty/0.0.24/ty-x86_64-unknown-linux-gnu/ty",
+        "server"
+      ],
+      "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/ty/0.0.24/ty-x86_64-unknown-linux-gnu/ty",
+      "version": {
+        "kind": "release",
+        "label": "0.0.24",
+        "repo_root": null,
+        "commit": null,
+        "short_commit": null,
+        "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/ty/0.0.24/ty-x86_64-unknown-linux-gnu/ty"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated",
+      "notes": []
+    },
+    {
+      "id": "pyrefly",
+      "display_name": "Pyrefly",
+      "output_path": "results/bench-servers/pyrefly-20260321T001740Z.json",
+      "success": false,
+      "benchmark_count": 6,
+      "command": [
+        "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyrefly/0.57.1/pyrefly",
+        "lsp",
+        "--indexing-mode",
+        "lazy-blocking",
+        "--build-system-blocking"
+      ],
+      "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyrefly/0.57.1/pyrefly",
+      "version": {
+        "kind": "release",
+        "label": "0.57.1",
+        "repo_root": null,
+        "commit": null,
+        "short_commit": null,
+        "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pyrefly/0.57.1/pyrefly"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated",
+      "notes": []
+    },
+    {
+      "id": "pylsp-mypy",
+      "display_name": "pylsp-mypy",
+      "output_path": "results/bench-servers/pylsp-mypy-20260321T001740Z.json",
+      "success": false,
+      "benchmark_count": 6,
+      "command": [
+        "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pylsp-mypy/venv/bin/pylsp"
+      ],
+      "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pylsp-mypy/venv/bin/pylsp",
+      "version": {
+        "kind": "release",
+        "label": "1.14.0",
+        "repo_root": null,
+        "commit": null,
+        "short_commit": null,
+        "source_path": "/home/runner/work/python-lsp-compare/python-lsp-compare/.python-lsp-compare/servers/pylsp-mypy/venv/bin/pylsp"
+      },
+      "requested_benchmarks": [
+        "data_science",
+        "django",
+        "pandas",
+        "sqlalchemy",
+        "transformers",
+        "web"
+      ],
+      "benchmark_root": null,
+      "timeout_seconds": 300.0,
+      "install_requirements": true,
+      "environment_mode": "isolated",
+      "notes": [
+        "Uses python-lsp-server (pylsp) with the pylsp-mypy plugin.",
+        "LSP features like hover and completion are provided by pylsp/jedi, not mypy.",
+        "mypy contributes diagnostics only."
+      ]
+    }
+  ]
+}
