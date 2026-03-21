@@ -15,6 +15,11 @@ METHOD_CONFIG_KEYS: dict[str, str] = {
     "find_references_points": "textDocument/references",
 }
 
+EDIT_METHOD_CONFIG_KEYS: dict[str, str] = {
+    "edit_then_complete_points": "textDocument/completion",
+    "edit_then_hover_points": "textDocument/hover",
+}
+
 
 @dataclass(slots=True)
 class BenchmarkValidation:
@@ -36,6 +41,18 @@ class BenchmarkPoint:
 
 
 @dataclass(slots=True)
+class BenchmarkEditPoint:
+    label: str
+    file_path: Path
+    edit_line: int
+    edit_text: str
+    query_line: int
+    query_character: int
+    query_method: str
+    validation: BenchmarkValidation = field(default_factory=BenchmarkValidation)
+
+
+@dataclass(slots=True)
 class BenchmarkSuite:
     name: str
     description: str
@@ -46,6 +63,7 @@ class BenchmarkSuite:
     iterations: int = 3
     warmup_iterations: int = 1
     points_by_method: dict[str, list[BenchmarkPoint]] = field(default_factory=dict)
+    edit_points: list[BenchmarkEditPoint] = field(default_factory=list)
 
 
 def discover_benchmark_suites(benchmark_root: Path | None = None) -> dict[str, BenchmarkSuite]:
@@ -75,6 +93,10 @@ def load_benchmark_suite(config_path: Path) -> BenchmarkSuite:
     for config_key, method in METHOD_CONFIG_KEYS.items():
         raw_points = _pick(data, config_key, config_key.upper(), default=[])
         points_by_method[method] = [_load_point(item, suite_root) for item in raw_points]
+    edit_points: list[BenchmarkEditPoint] = []
+    for config_key, method in EDIT_METHOD_CONFIG_KEYS.items():
+        raw_points = _pick(data, config_key, config_key.upper(), default=[])
+        edit_points.extend(_load_edit_point(item, suite_root, method) for item in raw_points)
     return BenchmarkSuite(
         name=_pick(data, "name", "TEST_NAME", default=suite_root.name),
         description=_pick(data, "description", "DESCRIPTION", default=f"Benchmark suite for {suite_root.name}."),
@@ -85,6 +107,7 @@ def load_benchmark_suite(config_path: Path) -> BenchmarkSuite:
         iterations=int(_pick(data, "iterations", "ITERATIONS", default=3)),
         warmup_iterations=int(_pick(data, "warmup_iterations", "WARMUP_ITERATIONS", default=1)),
         points_by_method={key: value for key, value in points_by_method.items() if value},
+        edit_points=edit_points,
     )
 
 
@@ -95,6 +118,20 @@ def _load_point(data: dict[str, Any], suite_root: Path) -> BenchmarkPoint:
         file_path=_resolve_point_path(suite_root, data["file"]),
         line=int(data["line"]),
         character=int(data["character"]),
+        validation=_load_validation(data.get("validation", {})),
+    )
+
+
+def _load_edit_point(data: dict[str, Any], suite_root: Path, query_method: str) -> BenchmarkEditPoint:
+    label = data.get("label") or f"{data['file']}:{data['edit_line']}:edit+query"
+    return BenchmarkEditPoint(
+        label=label,
+        file_path=_resolve_point_path(suite_root, data["file"]),
+        edit_line=int(data["edit_line"]),
+        edit_text=str(data["edit_text"]),
+        query_line=int(data["query_line"]),
+        query_character=int(data["query_character"]),
+        query_method=query_method,
         validation=_load_validation(data.get("validation", {})),
     )
 

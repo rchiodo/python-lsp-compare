@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
-from .benchmark_suites import BenchmarkPoint, BenchmarkSuite, BenchmarkValidation, discover_benchmark_suites
+from .benchmark_suites import BenchmarkEditPoint, BenchmarkPoint, BenchmarkSuite, BenchmarkValidation, discover_benchmark_suites
 from .environments import cleanup_benchmark_environment, prepare_benchmark_environment
 from .lsp_client import LspClient
 from .metrics import BenchmarkPointReport, BenchmarkSuiteReport, CallMetric, RunReport, ScenarioReport
@@ -213,6 +213,16 @@ def _run_single_benchmark_suite(
                             response_log=response_log,
                         )
                     )
+            for edit_point in suite.edit_points:
+                point_reports.append(
+                    _run_edit_benchmark_point(
+                        client=client,
+                        suite=suite,
+                        edit_point=edit_point,
+                        progress=progress,
+                        response_log=response_log,
+                    )
+                )
         finally:
             for uri in reversed(opened):
                 client.did_close(uri,)
@@ -318,6 +328,114 @@ def _run_benchmark_point(
     )
 
 
+def _run_edit_benchmark_point(
+    *,
+    client: LspClient,
+    suite: BenchmarkSuite,
+    edit_point: BenchmarkEditPoint,
+    progress: Callable[[str], None] | None,
+    response_log: io.TextIOBase | None = None,
+) -> BenchmarkPointReport:
+    metrics: list[CallMetric] = []
+    error_message: str | None = None
+    success = True
+    uri = edit_point.file_path.as_uri()
+    original_text = edit_point.file_path.read_text(encoding="utf-8")
+    original_lines = original_text.splitlines(keepends=True)
+    method = edit_point.query_method
+    label = f"{edit_point.label} (edit+{method.split('/')[-1]})"
+    _emit_progress(progress, f"[{suite.name}] {label} start")
+    version = 2  # version 1 was the initial did_open
+    for iteration in range(suite.warmup_iterations + suite.iterations):
+        is_warmup = iteration < suite.warmup_iterations
+        context = {
+            "suite": suite.name,
+            "label": label,
+            "file_path": str(edit_point.file_path),
+            "line": edit_point.query_line,
+            "character": edit_point.query_character,
+            "phase": "warmup" if is_warmup else "measured",
+            "iteration": iteration + 1 if is_warmup else iteration - suite.warmup_iterations + 1,
+        }
+        try:
+            # Insert the edit text as a new line.
+            insert_line = edit_point.edit_line
+            new_line = edit_point.edit_text + "\n"
+            client.did_change(
+                uri,
+                version,
+                [
+                    {
+                        "range": {
+                            "start": {"line": insert_line, "character": 0},
+                            "end": {"line": insert_line, "character": 0},
+                        },
+                        "text": new_line,
+                    }
+                ],
+                context={"suite": suite.name, "label": label, "phase": "edit"},
+            )
+            version += 1
+
+            # Now measure the query after the edit.
+            before = len(client.metrics)
+            result = _dispatch_benchmark_request(
+                client, method, uri,
+                edit_point.query_line, edit_point.query_character, context,
+            )
+            metrics.extend(client.metrics[before:])
+            if response_log is not None and not is_warmup:
+                _write_response_entry(response_log, context, method, result)
+
+            # Revert the edit to restore original document state.
+            client.did_change(
+                uri,
+                version,
+                [
+                    {
+                        "range": {
+                            "start": {"line": insert_line, "character": 0},
+                            "end": {"line": insert_line + 1, "character": 0},
+                        },
+                        "text": "",
+                    }
+                ],
+                context={"suite": suite.name, "label": label, "phase": "revert"},
+            )
+            version += 1
+        except Exception as exc:
+            success = False
+            error_message = str(exc)
+            _emit_progress(progress, f"[{suite.name}] {label} request failed: {error_message}")
+            break
+
+    measured_metrics = [metric for metric in metrics if metric.context.get("phase") == "measured" and metric.kind == "request"]
+    validation_summary = _validate_benchmark_point_results(method, edit_point.validation, measured_metrics)
+    if not validation_summary["passed"]:
+        success = False
+        error_message = _combine_error_messages(error_message, validation_summary["message"])
+    summary = _summarize_metrics(measured_metrics)
+    summary["validation"] = validation_summary
+    _emit_progress(
+        progress,
+        f"[{suite.name}] {label} {'ok' if success else 'failed'}"
+        + (f": {error_message}" if error_message else ""),
+    )
+    return BenchmarkPointReport(
+        label=label,
+        method=method,
+        file_path=str(edit_point.file_path),
+        line=edit_point.query_line,
+        character=edit_point.query_character,
+        success=success,
+        warmup_iterations=suite.warmup_iterations,
+        measured_iterations=suite.iterations,
+        metrics=metrics,
+        summary=summary,
+        error_message=error_message,
+    )
+
+
 def _dispatch_benchmark_request(
     client: LspClient,
     method: str,
@@ -350,6 +468,13 @@ def _open_benchmark_documents(client: LspClient, suite: BenchmarkSuite) -> list[
             seen.add(uri)
             client.did_open(uri, point.file_path.read_text(encoding="utf-8"), context={"suite": suite.name, "phase": "setup"})
             opened.append(uri)
+    for edit_point in suite.edit_points:
+        uri = edit_point.file_path.as_uri()
+        if uri in seen:
+            continue
+        seen.add(uri)
+        client.did_open(uri, edit_point.file_path.read_text(encoding="utf-8"), context={"suite": suite.name, "phase": "setup"})
+        opened.append(uri)
     return opened
 
 

@@ -113,6 +113,22 @@ class LspClient:
     def did_close(self, uri: str, context: dict[str, Any] | None = None) -> None:
         self.notify("textDocument/didClose", {"textDocument": {"uri": uri}}, context=context)
 
+    def did_change(
+        self,
+        uri: str,
+        version: int,
+        changes: list[dict[str, Any]],
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        self.notify(
+            "textDocument/didChange",
+            {
+                "textDocument": {"uri": uri, "version": version},
+                "contentChanges": changes,
+            },
+            context=context,
+        )
+
     def hover(self, uri: str, line: int, character: int, context: dict[str, Any] | None = None) -> Any:
         return self.request(
             "textDocument/hover",
