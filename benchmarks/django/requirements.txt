@@ -1,1 +1,2 @@
 django>=5.1,<6.0
+django-stubs>=5.1,<6.0
