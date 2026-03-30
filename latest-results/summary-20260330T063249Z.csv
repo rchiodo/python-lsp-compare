@@ -1,0 +1,121 @@
+report_type,baseline_server_id,server_id,server_name,suite_name,scenario_name,point_label,method,success,mean_ms,p95_ms,non_empty_rate,result_metric_name,result_metric_label,result_metric_value,result_metric_delta,validation_passed,validation_failure_count
+benchmark,pyright,pyright,Pyright,data_science,,dataframe completion,textDocument/completion,True,5.396662200001856,8.904882600003816,1.0,completion_item_count,Completions found,201.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,dataframe completion,textDocument/completion,True,1.5833143999998356,1.8190249999975092,1.0,completion_item_count,Completions found,225.0,24.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,dataframe completion,textDocument/completion,True,44.38970300000733,175.40055140000842,1.0,completion_item_count,Completions found,250.0,49.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,data_science,,dataframe completion,textDocument/completion,True,49.23264860000245,74.41178040000409,1.0,completion_item_count,Completions found,181.0,-20.0,True,0
+benchmark,pyright,pyright,Pyright,data_science,,dataframe describe hover,textDocument/hover,True,1.050524400002928,1.1007497999997895,1.0,hover_text_char_count,Hover length,4019.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,dataframe describe hover,textDocument/hover,True,0.27421700000900273,0.28743620000568626,1.0,hover_text_char_count,Hover length,3908.0,-111.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,dataframe describe hover,textDocument/hover,True,4.225282800001651,12.612283399988652,1.0,hover_text_char_count,Hover length,8341.0,4322.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,data_science,,dataframe describe hover,textDocument/hover,True,203.72311079999577,241.46676599999634,1.0,hover_text_char_count,Hover length,4134.0,115.0,True,0
+benchmark,pyright,pyright,Pyright,data_science,,summarize definition,textDocument/definition,True,0.4152784000041265,0.4618054000019356,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,summarize definition,textDocument/definition,True,0.21798979999516632,0.22375659999624986,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,summarize definition,textDocument/definition,True,0.5170308000003843,1.3308124000161567,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,data_science,,summarize definition,textDocument/definition,True,1.0005649999982325,1.016098199983162,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,data_science,,edit array then complete (edit+completion),textDocument/completion,True,209.42230379999955,302.3181976000046,1.0,completion_item_count,Completions found,169.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,edit array then complete (edit+completion),textDocument/completion,True,16.654388599999947,17.288830799998323,1.0,completion_item_count,Completions found,167.0,-2.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,edit array then complete (edit+completion),textDocument/completion,True,23.909984199997325,36.49043619999475,1.0,completion_item_count,Completions found,149.0,-20.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,data_science,,edit array then complete (edit+completion),textDocument/completion,False,4.655849000005219,4.768093200010526,0.0,completion_item_count,Completions found,0.0,-169.0,False,10
+benchmark,pyright,pyright,Pyright,data_science,,edit array then hover (edit+hover),textDocument/hover,True,26.899214599995958,28.377570600000013,1.0,hover_text_char_count,Hover length,278.0,0.0,True,0
+benchmark,pyright,ty,Ty,data_science,,edit array then hover (edit+hover),textDocument/hover,True,1.8551001999981054,1.8739454000012756,1.0,hover_text_char_count,Hover length,376.0,98.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,data_science,,edit array then hover (edit+hover),textDocument/hover,True,0.3207879999990837,0.41551680000111446,1.0,hover_text_char_count,Hover length,354.0,76.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,data_science,,edit array then hover (edit+hover),textDocument/hover,True,193.18901779999464,225.6153834000031,1.0,hover_text_char_count,Hover length,5644.0,5366.0,True,0
+benchmark,pyright,pyright,Pyright,django,,queryset completion,textDocument/completion,True,4.841628200000514,7.10445520000178,1.0,completion_item_count,Completions found,10.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,queryset completion,textDocument/completion,True,5.0734194000028765,8.462886799992473,1.0,completion_item_count,Completions found,254.0,244.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,queryset completion,textDocument/completion,True,29.703047199996035,117.50249219998634,1.0,completion_item_count,Completions found,38.0,28.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,django,,queryset completion,textDocument/completion,True,207.77860560000363,607.2375010000143,1.0,completion_item_count,Completions found,2.0,-8.0,True,0
+benchmark,pyright,pyright,Pyright,django,,queryset filter hover,textDocument/hover,True,0.5267989999993006,0.5843590000040422,1.0,hover_text_char_count,Hover length,57.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,queryset filter hover,textDocument/hover,True,0.244144199996299,0.2813855999875159,1.0,hover_text_char_count,Hover length,46.0,-11.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,queryset filter hover,textDocument/hover,True,0.22334960000307547,0.23181719999456618,1.0,hover_text_char_count,Hover length,298.0,241.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,django,,queryset filter hover,textDocument/hover,True,170.99793540000405,173.15320160000738,1.0,hover_text_char_count,Hover length,57.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,django,,model definition,textDocument/definition,True,0.42540559999793004,0.4718701999905761,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,model definition,textDocument/definition,True,0.20680279999965023,0.2118041999892739,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,model definition,textDocument/definition,True,0.19712040000285924,0.20289860000843873,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,django,,model definition,textDocument/definition,True,1.0782861999928173,1.1618185999964226,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,django,,edit queryset then complete (edit+completion),textDocument/completion,True,23.896463600001994,26.119090800003164,1.0,completion_item_count,Completions found,105.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,edit queryset then complete (edit+completion),textDocument/completion,True,2.6901358000031905,2.8044534000116528,1.0,completion_item_count,Completions found,104.0,-1.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,edit queryset then complete (edit+completion),textDocument/completion,True,2.5249005999967267,5.7535373999826325,1.0,completion_item_count,Completions found,83.0,-22.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,django,,edit queryset then complete (edit+completion),textDocument/completion,True,279.54145100000005,282.23344019999104,1.0,completion_item_count,Completions found,143.0,38.0,True,0
+benchmark,pyright,pyright,Pyright,django,,edit queryset then hover (edit+hover),textDocument/hover,True,42.54138059999946,47.104182799998284,1.0,hover_text_char_count,Hover length,83.0,0.0,True,0
+benchmark,pyright,ty,Ty,django,,edit queryset then hover (edit+hover),textDocument/hover,True,1.4329611999983172,1.4697154000032242,1.0,hover_text_char_count,Hover length,100.0,17.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,django,,edit queryset then hover (edit+hover),textDocument/hover,True,0.2419624000026488,0.2700590000245029,1.0,hover_text_char_count,Hover length,144.0,61.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,django,,edit queryset then hover (edit+hover),textDocument/hover,True,199.12415140000235,200.51107200000047,1.0,hover_text_char_count,Hover length,71.0,-12.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,report dataframe completion,textDocument/completion,True,76.7247948000005,261.23925579999815,1.0,completion_item_count,Completions found,274.2,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,report dataframe completion,textDocument/completion,True,16.559547200006364,20.71217300002104,1.0,completion_item_count,Completions found,1000.0,725.8,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,report dataframe completion,textDocument/completion,True,52.65421659999561,208.82968119998958,1.0,completion_item_count,Completions found,39.0,-235.2,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,pandas,,report dataframe completion,textDocument/completion,True,125.10786339999527,350.3445809999902,1.0,completion_item_count,Completions found,6.0,-268.2,True,0
+benchmark,pyright,pyright,Pyright,pandas,,dataframe groupby hover,textDocument/hover,True,0.6616150000041898,0.7590395999983457,1.0,hover_text_char_count,Hover length,350.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,dataframe groupby hover,textDocument/hover,True,0.281255400000191,0.311958199995388,1.0,hover_text_char_count,Hover length,308.0,-42.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,dataframe groupby hover,textDocument/hover,True,1.8612945999961994,1.9724305999829994,1.0,hover_text_char_count,Hover length,3120.0,2770.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,pandas,,dataframe groupby hover,textDocument/hover,True,201.71672560000502,205.73399180001388,1.0,hover_text_char_count,Hover length,301.0,-49.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,build report definition,textDocument/definition,True,0.44690940000009505,0.5117829999988999,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,build report definition,textDocument/definition,True,0.2234034000025531,0.2367285999980595,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,build report definition,textDocument/definition,True,0.5546664000007695,1.5943384000195233,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,pandas,,build report definition,textDocument/definition,True,1.1000165999973888,1.2290938000035112,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,edit dataframe then complete (edit+completion),textDocument/completion,True,484.89781840000035,916.3408868000062,1.0,completion_item_count,Completions found,441.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,edit dataframe then complete (edit+completion),textDocument/completion,True,11.654448000001594,12.553625200007446,1.0,completion_item_count,Completions found,448.0,7.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,edit dataframe then complete (edit+completion),textDocument/completion,True,26.6719978000026,52.379761400004554,1.0,completion_item_count,Completions found,256.0,-185.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,pandas,,edit dataframe then complete (edit+completion),textDocument/completion,True,214.3325451999999,217.0349061999957,1.0,completion_item_count,Completions found,442.0,1.0,True,0
+benchmark,pyright,pyright,Pyright,pandas,,edit dataframe then hover (edit+hover),textDocument/hover,True,11.09147100000314,13.108055999995827,1.0,hover_text_char_count,Hover length,4292.0,0.0,True,0
+benchmark,pyright,ty,Ty,pandas,,edit dataframe then hover (edit+hover),textDocument/hover,True,1.3631347999989885,1.4024768000069798,1.0,hover_text_char_count,Hover length,281.0,-4011.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,pandas,,edit dataframe then hover (edit+hover),textDocument/hover,True,0.2783226000076411,0.30767460000902247,1.0,hover_text_char_count,Hover length,328.0,-3964.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,pandas,,edit dataframe then hover (edit+hover),textDocument/hover,True,192.68786800000157,193.86169840001344,1.0,hover_text_char_count,Hover length,232.0,-4060.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,query completion,textDocument/completion,True,6.335300999998594,11.847351400001571,1.0,completion_item_count,Completions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,query completion,textDocument/completion,True,4.220039999995606,10.399461600002267,1.0,completion_item_count,Completions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,query completion,textDocument/completion,True,83.86696319999487,331.62023200000584,1.0,completion_item_count,Completions found,38.0,37.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,sqlalchemy,,query completion,textDocument/completion,True,66.28963920000501,112.39043160001073,1.0,completion_item_count,Completions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,sessionmaker hover,textDocument/hover,True,1.4731884000013906,1.7382952000048135,1.0,hover_text_char_count,Hover length,10572.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,sessionmaker hover,textDocument/hover,True,0.3667857999971602,0.39285440000753624,1.0,hover_text_char_count,Hover length,10580.0,8.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,sessionmaker hover,textDocument/hover,True,0.7811826000022393,0.9209618000113551,1.0,hover_text_char_count,Hover length,13682.0,3110.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,sqlalchemy,,sessionmaker hover,textDocument/hover,True,343.4951486000102,382.93995460000474,1.0,hover_text_char_count,Hover length,10498.0,-74.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,mapped class definition,textDocument/definition,True,0.37845979999815427,0.42624679999789805,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,mapped class definition,textDocument/definition,True,0.20352280000111023,0.2290104000053361,1.0,location_count,Definitions found,2.0,1.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,mapped class definition,textDocument/definition,True,0.23084559999801968,0.2751485999965553,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,sqlalchemy,,mapped class definition,textDocument/definition,True,1.0504555999943932,1.0874365999825386,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,sqlalchemy,,edit query then complete (edit+completion),textDocument/completion,True,132.70601559999875,191.61042620000615,1.0,completion_item_count,Completions found,39.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,edit query then complete (edit+completion),textDocument/completion,True,2.0258654000087972,2.14122340000813,1.0,completion_item_count,Completions found,23.0,-16.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,edit query then complete (edit+completion),textDocument/completion,True,6.915473800000882,10.289436600015733,1.0,completion_item_count,Completions found,17.0,-22.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,sqlalchemy,,edit query then complete (edit+completion),textDocument/completion,False,28.387507400003642,29.380916999986084,0.0,completion_item_count,Completions found,0.0,-39.0,False,10
+benchmark,pyright,pyright,Pyright,sqlalchemy,,edit session then hover (edit+hover),textDocument/hover,True,82.3463581999988,92.10486359999663,1.0,hover_text_char_count,Hover length,900.0,0.0,True,0
+benchmark,pyright,ty,Ty,sqlalchemy,,edit session then hover (edit+hover),textDocument/hover,True,1.633712599999626,1.6518102000020463,1.0,hover_text_char_count,Hover length,304.0,-596.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,sqlalchemy,,edit session then hover (edit+hover),textDocument/hover,False,0.22086499999431908,0.23703339999769923,0.0,hover_text_char_count,Hover length,0.0,-900.0,False,10
+benchmark,pyright,pylsp-mypy,pylsp-mypy,sqlalchemy,,edit session then hover (edit+hover),textDocument/hover,False,26.134490599986293,26.28489399998557,0.0,hover_text_char_count,Hover length,0.0,-900.0,False,10
+benchmark,pyright,pyright,Pyright,transformers,,classifier pipeline completion,textDocument/completion,True,51.41850880000334,87.48957540001356,1.0,completion_item_count,Completions found,123.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,classifier pipeline completion,textDocument/completion,True,11.19333440000787,13.431360399999903,1.0,completion_item_count,Completions found,767.0,644.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,classifier pipeline completion,textDocument/completion,True,336.13202020000017,1343.1239894000041,1.0,completion_item_count,Completions found,38.0,-85.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,transformers,,classifier pipeline completion,textDocument/completion,True,139.1111111999976,145.74417279999352,1.0,completion_item_count,Completions found,2.0,-121.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,pipeline hover,textDocument/hover,True,0.44847500000742,0.5541022000215889,1.0,hover_text_char_count,Hover length,34.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,pipeline hover,textDocument/hover,True,0.20640019999973447,0.22627939999324553,1.0,hover_text_char_count,Hover length,7.0,-27.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,pipeline hover,textDocument/hover,True,0.23314540000001216,0.2438428000004933,1.0,hover_text_char_count,Hover length,48.0,14.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,transformers,,pipeline hover,textDocument/hover,False,2542.3971743999914,2594.953974399982,0.0,hover_text_char_count,Hover length,0.0,-34.0,False,10
+benchmark,pyright,pyright,Pyright,transformers,,auto tokenizer definition,textDocument/definition,True,0.8898559999977351,2.3902572000110918,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,auto tokenizer definition,textDocument/definition,True,0.25280700000394063,0.2840576000096462,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,auto tokenizer definition,textDocument/definition,True,0.2501596000001882,0.26601280001159466,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,transformers,,auto tokenizer definition,textDocument/definition,True,2226.8178523999836,2306.883420999975,1.0,location_count,Definitions found,1.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,edit prediction then complete (edit+completion),textDocument/completion,True,6.065720800000918,6.77214620001223,0.0,completion_item_count,Completions found,0.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,edit prediction then complete (edit+completion),textDocument/completion,True,3.1345963999967807,3.3580824000011944,1.0,completion_item_count,Completions found,23.0,23.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,edit prediction then complete (edit+completion),textDocument/completion,True,26.510982799999283,87.32606420000478,0.0,completion_item_count,Completions found,0.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,transformers,,edit prediction then complete (edit+completion),textDocument/completion,True,2.6315545999977985,3.174595800021507,0.0,completion_item_count,Completions found,0.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,transformers,,edit tokenizer then hover (edit+hover),textDocument/hover,True,589.2775088000008,607.5823997999862,1.0,hover_text_char_count,Hover length,30.0,0.0,True,0
+benchmark,pyright,ty,Ty,transformers,,edit tokenizer then hover (edit+hover),textDocument/hover,True,2.797374200008562,2.9335008000032303,1.0,hover_text_char_count,Hover length,7.0,-23.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,transformers,,edit tokenizer then hover (edit+hover),textDocument/hover,True,2.5943025999993097,3.8450151999995796,1.0,hover_text_char_count,Hover length,43.0,13.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,transformers,,edit tokenizer then hover (edit+hover),textDocument/hover,False,9786.991290199989,9936.822683599996,0.0,hover_text_char_count,Hover length,0.0,-30.0,False,10
+benchmark,pyright,pyright,Pyright,web,,request args completion,textDocument/completion,True,5.288466000007475,9.753887600004417,1.0,completion_item_count,Completions found,16.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,request args completion,textDocument/completion,True,5.798990000005233,9.770673799994256,1.0,completion_item_count,Completions found,441.0,425.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,request args completion,textDocument/completion,True,51.97206580000966,185.62288280000982,1.0,completion_item_count,Completions found,351.4,335.4,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,web,,request args completion,textDocument/completion,True,22.203415000001314,26.511269800016635,1.0,completion_item_count,Completions found,1.0,-15.0,True,0
+benchmark,pyright,pyright,Pyright,web,,client session hover,textDocument/hover,True,0.5666914000016732,0.681550599995262,1.0,hover_text_char_count,Hover length,26.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,client session hover,textDocument/hover,True,0.21040540000285546,0.22959340000170414,1.0,hover_text_char_count,Hover length,7.0,-19.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,client session hover,textDocument/hover,True,3.2897509999997965,10.565226200003506,1.0,hover_text_char_count,Hover length,314.0,288.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,web,,client session hover,textDocument/hover,True,16.870620400004555,26.942342000006647,1.0,hover_text_char_count,Hover length,359.0,333.0,True,0
+benchmark,pyright,pyright,Pyright,web,,client references,textDocument/references,True,0.858054999991964,0.9448914000074637,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,client references,textDocument/references,True,0.4501880000077563,0.5395794000207843,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,client references,textDocument/references,True,0.34665000000018154,0.37399459998255224,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,web,,client references,textDocument/references,True,17.19959279998875,36.673079399974995,1.0,location_count,References found,2.0,0.0,True,0
+benchmark,pyright,pyright,Pyright,web,,edit response then complete (edit+completion),textDocument/completion,True,3.835363600001074,5.1320803999942655,1.0,completion_item_count,Completions found,205.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,edit response then complete (edit+completion),textDocument/completion,True,2.2720034000030864,2.422831400014047,1.0,completion_item_count,Completions found,227.0,22.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,edit response then complete (edit+completion),textDocument/completion,False,0.3800483999896187,0.40667039999107146,0.0,completion_item_count,Completions found,0.0,-205.0,False,10
+benchmark,pyright,pylsp-mypy,pylsp-mypy,web,,edit response then complete (edit+completion),textDocument/completion,True,107.62832279999657,166.0826607999752,1.0,completion_item_count,Completions found,56.0,-149.0,True,0
+benchmark,pyright,pyright,Pyright,web,,edit response then hover (edit+hover),textDocument/hover,True,28.895703000000594,31.865608200001816,1.0,hover_text_char_count,Hover length,762.0,0.0,True,0
+benchmark,pyright,ty,Ty,web,,edit response then hover (edit+hover),textDocument/hover,True,0.7841664000011406,0.8270926000022882,1.0,hover_text_char_count,Hover length,304.0,-458.0,True,0
+benchmark,pyright,pyrefly,Pyrefly,web,,edit response then hover (edit+hover),textDocument/hover,True,0.20573259999991933,0.22008940000546318,1.0,hover_text_char_count,Hover length,31.0,-731.0,True,0
+benchmark,pyright,pylsp-mypy,pylsp-mypy,web,,edit response then hover (edit+hover),textDocument/hover,True,176.15921279998474,176.89685199999303,1.0,hover_text_char_count,Hover length,257.0,-505.0,True,0
