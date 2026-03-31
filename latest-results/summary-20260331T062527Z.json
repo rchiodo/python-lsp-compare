@@ -15,12 +15,12 @@
     "web"
   ],
   "baseline_server": "pyright",
-  "generated_at": "20260330T063249Z",
+  "generated_at": "20260331T062527Z",
   "servers": [
     {
       "id": "pyright",
       "display_name": "Pyright",
-      "output_path": "results/bench-servers/pyright-20260330T063249Z.json",
+      "output_path": "results/bench-servers/pyright-20260331T062527Z.json",
       "success": true,
       "benchmark_count": 6,
       "command": [
@@ -56,7 +56,7 @@
     {
       "id": "ty",
       "display_name": "Ty",
-      "output_path": "results/bench-servers/ty-20260330T063249Z.json",
+      "output_path": "results/bench-servers/ty-20260331T062527Z.json",
       "success": true,
       "benchmark_count": 6,
       "command": [
@@ -89,7 +89,7 @@
     {
       "id": "pyrefly",
       "display_name": "Pyrefly",
-      "output_path": "results/bench-servers/pyrefly-20260330T063249Z.json",
+      "output_path": "results/bench-servers/pyrefly-20260331T062527Z.json",
       "success": false,
       "benchmark_count": 6,
       "command": [
@@ -125,7 +125,7 @@
     {
       "id": "pylsp-mypy",
       "display_name": "pylsp-mypy",
-      "output_path": "results/bench-servers/pylsp-mypy-20260330T063249Z.json",
+      "output_path": "results/bench-servers/pylsp-mypy-20260331T062527Z.json",
       "success": false,
       "benchmark_count": 6,
       "command": [
