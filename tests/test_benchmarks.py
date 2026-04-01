@@ -242,7 +242,8 @@ class BenchmarkSuiteTests(unittest.TestCase):
             env_data = json.loads(env_capture.read_text(encoding="utf-8"))
             self.assertEqual(Path(env_data["virtual_env"]), Path(suite_report.environment_path))
             self.assertEqual(Path(env_data["sys_executable"]), Path(suite_report.python_executable))
-            self.assertTrue(env_data["path"].startswith(str(Path(suite_report.environment_path) / "Scripts")))
+            bin_dir = "Scripts" if sys.platform == "win32" else "bin"
+            self.assertTrue(env_data["path"].startswith(str(Path(suite_report.environment_path) / bin_dir)))
 
 
 if __name__ == "__main__":
