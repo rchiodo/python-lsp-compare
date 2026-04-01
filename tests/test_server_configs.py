@@ -195,7 +195,9 @@ class ServerConfigTests(unittest.TestCase):
             self.assertEqual(summary["servers"][0]["requested_benchmarks"], ["fixture_suite"])
             self.assertTrue(summary["servers"][0]["success"])
             env_data = json.loads(env_capture.read_text(encoding="utf-8"))
-            self.assertTrue(env_data["virtual_env"].endswith("benchmark_suite\\.venv"))
+            venv_path = Path(env_data["virtual_env"])
+            self.assertEqual(venv_path.parent.name, "benchmark_suite")
+            self.assertEqual(venv_path.name, ".venv")
             report_files = list(output_dir.glob("bench-server-*.json"))
             self.assertEqual(len(report_files), 1)
 
