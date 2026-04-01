@@ -200,6 +200,9 @@ def _run_single_benchmark_suite(
         )
         _emit_progress(progress, f"[{suite.name}] open benchmark documents")
         opened = _open_benchmark_documents(client, suite)
+        # Track document versions per-URI across benchmark points.
+        # did_open uses version 1, so the next version is 2.
+        document_versions: dict[str, int] = {uri: 2 for uri in opened}
         try:
             for method, points in suite.points_by_method.items():
                 for point in points:
@@ -219,6 +222,7 @@ def _run_single_benchmark_suite(
                         client=client,
                         suite=suite,
                         edit_point=edit_point,
+                        document_versions=document_versions,
                         progress=progress,
                         response_log=response_log,
                     )
@@ -333,6 +337,7 @@ def _run_edit_benchmark_point(
     client: LspClient,
     suite: BenchmarkSuite,
     edit_point: BenchmarkEditPoint,
+    document_versions: dict[str, int],
     progress: Callable[[str], None] | None,
     response_log: io.TextIOBase | None = None,
 ) -> BenchmarkPointReport:
@@ -345,7 +350,7 @@ def _run_edit_benchmark_point(
     method = edit_point.query_method
     label = f"{edit_point.label} (edit+{method.split('/')[-1]})"
     _emit_progress(progress, f"[{suite.name}] {label} start")
-    version = 2  # version 1 was the initial did_open
+    version = document_versions.get(uri, 2)
     for iteration in range(suite.warmup_iterations + suite.iterations):
         is_warmup = iteration < suite.warmup_iterations
         context = {
@@ -409,6 +414,7 @@ def _run_edit_benchmark_point(
             _emit_progress(progress, f"[{suite.name}] {label} request failed: {error_message}")
             break
 
+    document_versions[uri] = version
     measured_metrics = [metric for metric in metrics if metric.context.get("phase") == "measured" and metric.kind == "request"]
     validation_summary = _validate_benchmark_point_results(method, edit_point.validation, measured_metrics)
     if not validation_summary["passed"]:
