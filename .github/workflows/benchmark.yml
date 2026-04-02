@@ -27,6 +27,13 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}          
+
       - name: Install package
         run: pip install -e .
 
@@ -40,3 +47,5 @@ jobs:
           git add latest-results.md latest-results/
           git diff --cached --quiet || git commit -m "Update benchmark results from workflow runner"
           git push
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}          
