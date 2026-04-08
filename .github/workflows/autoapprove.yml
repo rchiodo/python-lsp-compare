@@ -31,4 +31,4 @@ jobs:
       - name: Auto-approve
         uses: hmarr/auto-approve-action@v4
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
