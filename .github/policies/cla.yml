@@ -1,10 +1,15 @@
-content:
-  - https://raw.githubusercontent.com/microsoft/ContributorLicenseAgreement/main/CLA.md
+name: Contributor License Agreement Policy
+description: CLA policy file
+resource: repository
 
-minimalChangeRequired:
-  files: 1
+configuration:
+  cla:
+    content: https://raw.githubusercontent.com/microsoft/ContributorLicenseAgreement/main/CLA.md
 
-bypassUsers:
-  - python-lsp-compare-bot
-  - python-lsp-compare-bot[bot]
-  - github-actions[bot]
+    minimalChangeRequired:
+      files: 1
+
+    bypassUsers:
+      - python-lsp-compare-bot
+      - python-lsp-compare-bot[bot]
+      - github-actions[bot]
