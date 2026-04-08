@@ -13,6 +13,11 @@ jobs:
     if: github.event.pull_request.user.login == 'python-lsp-compare-bot[bot]' || github.event.pull_request.user.login == 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Auto-approve
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - id: app-token
         uses: tibdex/github-app-token@v2
         with:
@@ -27,8 +32,3 @@ jobs:
             --squash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-
-      - name: Auto-approve
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
