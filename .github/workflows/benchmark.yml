@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: benchmark
@@ -40,12 +41,17 @@ jobs:
       - name: Run benchmarks
         run: python -m python_lsp_compare bench-servers --baseline-server pyright
 
-      - name: Commit results
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add latest-results.md latest-results/
-          git diff --cached --quiet || git commit -m "Update benchmark results from workflow runner"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}          
+      - name: Create pull request for results
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: Update benchmark results from workflow runner
+          branch: automation/benchmark-results
+          delete-branch: true
+          title: Update benchmark results
+          body: |
+            Automated benchmark result update from the scheduled workflow run.
+          add-paths: |
+            latest-results.md
+            latest-results/
+
