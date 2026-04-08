@@ -4,7 +4,7 @@ resource: repository
 
 configuration:
   cla:
-    content: https://raw.githubusercontent.com/microsoft/ContributorLicenseAgreement/main/CLA.md
+    content: https://raw.githubusercontent.com/microsoft/.github/main/CLA/microsoft.yml
 
     minimalChangeRequired:
       files: 1
