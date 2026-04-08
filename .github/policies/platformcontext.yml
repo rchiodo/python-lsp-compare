@@ -1,0 +1,6 @@
+name: GitHub Platform Context
+description: Enable GitOps policies for this repository
+resource: repository
+
+configuration:
+  platform: github
