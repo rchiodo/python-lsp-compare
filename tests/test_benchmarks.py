@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -19,7 +20,7 @@ from python_lsp_compare.runner import run_benchmarks
 class BenchmarkSuiteTests(unittest.TestCase):
     def test_discover_bundled_benchmark_suites(self) -> None:
         suites = discover_benchmark_suites()
-        self.assertTrue({"sqlalchemy", "web", "data_science", "django", "pandas", "transformers", "tsp_core"}.issubset(suites))
+        self.assertTrue({"sqlalchemy", "web", "data_science", "django", "pandas", "transformers", "tsp_core", "tsp_semantic"}.issubset(suites))
 
         django_suite = suites["django"]
         self.assertEqual(django_suite.requirements_file.name, "requirements.txt")
@@ -109,6 +110,30 @@ class BenchmarkSuiteTests(unittest.TestCase):
 
         completion_point = next(point for point in suite_report.points if point.method == "textDocument/completion")
         self.assertEqual(completion_point.summary["result_summary"]["metrics"]["completion_item_count"]["mean"], 1.0)
+
+    def test_run_benchmark_suite_excludes_environment_setup_from_total_duration(self) -> None:
+        server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
+        import python_lsp_compare.runner as runner_module
+
+        original_prepare = runner_module.prepare_benchmark_environment
+
+        def slow_prepare(*args, **kwargs):
+            import time
+
+            time.sleep(0.75)
+            return original_prepare(*args, **kwargs)
+
+        with patch.object(runner_module, "prepare_benchmark_environment", side_effect=slow_prepare):
+            report = run_benchmarks(
+                command=[sys.executable, str(server_script)],
+                benchmark_names=["fixture_suite"],
+                benchmark_root=Path(__file__).parent / "fixtures",
+                timeout_seconds=2.0,
+            )
+
+        suite_report = report.benchmark_reports[0]
+        self.assertTrue(suite_report.success)
+        self.assertLess(suite_report.total_duration_ms, 750.0)
 
     def test_run_tsp_benchmark_suite(self) -> None:
         server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
@@ -220,6 +245,61 @@ class BenchmarkSuiteTests(unittest.TestCase):
             self.assertEqual(len(suite_report.points), 1)
             self.assertEqual(suite_report.points[0].method, "typeServer/getComputedType")
             self.assertIn("edit+getComputedType", suite_report.points[0].label)
+
+    def test_run_tsp_semantic_tokens_benchmark_suite(self) -> None:
+        server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            suite_root = temp_path / "tsp_semantic_fixture"
+            source_dir = suite_root / "src"
+            source_dir.mkdir(parents=True, exist_ok=True)
+            (source_dir / "sample.py").write_text(
+                "from pathlib import Path\n\n"
+                "def load_name(path: Path) -> str:\n"
+                "    return path.name\n\n"
+                "value = load_name(Path('.'))\n",
+                encoding="utf-8",
+            )
+            (suite_root / "config.json").write_text(
+                json.dumps(
+                    {
+                        "name": "tsp_semantic_fixture",
+                        "description": "Fixture TSP semantic tokens benchmark suite.",
+                        "protocol": "tsp",
+                        "workspace_dir": "src",
+                        "iterations": 2,
+                        "warmup_iterations": 1,
+                        "tsp_points": [
+                            {
+                                "label": "semantic tokens full file",
+                                "request": "typeServer/semanticTokens",
+                                "file": "src/sample.py",
+                                "start_line": 0,
+                                "start_character": 0,
+                                "end_line": 5,
+                                "end_character": 0,
+                                "validation": {"requireNonEmpty": True, "minSizeChars": 10},
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = run_benchmarks(
+                command=[sys.executable, str(server_script)],
+                benchmark_names=["tsp_semantic_fixture"],
+                benchmark_root=temp_path,
+                timeout_seconds=2.0,
+            )
+
+            suite_report = report.benchmark_reports[0]
+            self.assertTrue(suite_report.success)
+            self.assertEqual(len(suite_report.points), 1)
+            self.assertEqual(suite_report.points[0].method, "typeServer/semanticTokens")
+            metrics = suite_report.points[0].summary["result_summary"]["metrics"]
+            self.assertGreater(metrics["semantic_token_count"]["mean"], 0)
+            self.assertGreater(metrics["type_query_count"]["mean"], 0)
 
     def test_tsp_benchmark_validation_fails_on_unexpected_type_name(self) -> None:
         server_script = Path(__file__).parent / "fixtures" / "fake_lsp_server.py"

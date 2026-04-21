@@ -91,7 +91,7 @@ def _render_benchmark_report(
             )
         )
     lines.append("")
-    lines.append("*Wall clock ms includes server startup, warmup iterations, and shutdown — not just measured requests.*")
+    lines.append("*Wall clock ms includes server startup, warmup iterations, and shutdown — but excludes one-time environment creation and dependency installation.*")
 
     discovered_suite_order = _ordered_unique(
         report.get("name")
@@ -187,7 +187,7 @@ def _render_benchmark_report(
             lines.append("")
             lines.append(f"### {point_label}")
             lines.append("")
-            lines.append(f"Method: `{method}`")
+            lines.append(f"Method: {_display_method_name(method)}")
             lines.append("")
             baseline_label = baseline_server["display_name"] if baseline_server is not None else point_rows[0]["server"]
             lines.append(f"| Server | Success | Mean ms | P95 ms | Non-empty % | {measure_label} | Delta vs {baseline_label} | Validation |")
@@ -320,6 +320,14 @@ def _render_scenario_report(
                     "| {server} | {success} | {total_ms} | {avg_request_ms} | {requests} | {non_empty_rate} | {metric_value} | {delta} |".format(**row)
                 )
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _display_method_name(method: str | None) -> str:
+    if method == "typeServer/semanticTokens":
+        return "semantic token impl using typeServer/getComputedType"
+    if method:
+        return f"`{method}`"
+    return "unknown"
 
 
 def _metadata_lines(summary_path: Path, summary: dict[str, Any], baseline_server: dict[str, Any] | None) -> list[str]:
@@ -492,6 +500,7 @@ def _preferred_result_metric(method: str | None, metrics: list[dict[str, Any]]) 
         "typeServer/getComputedType": ("type_name", "Type name"),
         "typeServer/getDeclaredType": ("type_name", "Type name"),
         "typeServer/getExpectedType": ("type_name", "Type name"),
+        "typeServer/semanticTokens": ("semantic_token_count", "Semantic tokens found"),
     }
     if method in candidates:
         key, label = candidates[method]
