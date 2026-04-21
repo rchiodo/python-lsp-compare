@@ -10,14 +10,16 @@ permissions:
 
 jobs:
   approve:
-    if: github.event.pull_request.user.login == 'github-actions[bot]'
+    if: |
+      github.event.pull_request.user.login == 'python-lsp-compare-bot' ||
+      github.event.pull_request.user.login == 'python-lsp-compare-bot[bot]'
     runs-on: ubuntu-latest
     steps:
       - id: app-token
         uses: tibdex/github-app-token@v2
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app_id: ${{ secrets.PYTHON_LSP_COMPARE_REVIEW_BOT_APP_ID }}
+          private_key: ${{ secrets.PYTHON_LSP_COMPARE_REVIEW_BOT_PRIVATE_KEY }}
 
       - name: Auto-approve
         uses: hmarr/auto-approve-action@v4
