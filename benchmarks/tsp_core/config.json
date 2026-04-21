@@ -7,6 +7,19 @@
   "warmup_iterations": 1,
   "tsp_points": [
     {
+      "label": "builtins semantic tokens",
+      "request": "typeServer/semanticTokens",
+      "file": "src/builtins_basic.py",
+      "start_line": 0,
+      "start_character": 0,
+      "end_line": 999,
+      "end_character": 0,
+      "validation": {
+        "requireNonEmpty": true,
+        "minSizeChars": 25
+      }
+    },
+    {
       "label": "builtin int computed type",
       "request": "typeServer/getComputedType",
       "file": "src/builtins_basic.py",

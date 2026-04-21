@@ -193,6 +193,32 @@ class LspClient:
     def tsp_remove_virtual_file_redirect(self, real_uri: str, context: dict[str, Any] | None = None) -> None:
         self.notify("pyright/removeVirtualFileRedirect", {"realUri": real_uri}, context=context)
 
+    def record_local_request(
+        self,
+        method: str,
+        duration_ms: float,
+        *,
+        success: bool = True,
+        result: Any = None,
+        error: dict[str, Any] | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        self._metrics.append(
+            build_call_metric(
+                kind="request",
+                method=method,
+                duration_ms=duration_ms,
+                success=success,
+                started_at_unix=time.time(),
+                bytes_sent=0,
+                bytes_received=0,
+                request_id=f"local-{len(self._metrics) + 1}",
+                error=error,
+                result=result,
+                context=context,
+            )
+        )
+
     def request(self, method: str, params: dict[str, Any] | None, context: dict[str, Any] | None = None) -> Any:
         request_id = self._next_request_id
         self._next_request_id += 1

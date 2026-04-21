@@ -1,0 +1,50 @@
+{
+  "name": "tsp_semantic",
+  "description": "Benchmark Pyrefly TSP-backed semantic tokenization across Django, transformers, and stdlib-heavy files.",
+  "protocol": "tsp",
+  "workspace_dir": "src",
+  "requirements_file": "requirements.txt",
+  "iterations": 5,
+  "warmup_iterations": 1,
+  "tsp_points": [
+    {
+      "label": "django semantic tokens",
+      "request": "typeServer/semanticTokens",
+      "file": "src/django_semantic.py",
+      "start_line": 0,
+      "start_character": 0,
+      "end_line": 999,
+      "end_character": 0,
+      "validation": {
+        "requireNonEmpty": true,
+        "minSizeChars": 50
+      }
+    },
+    {
+      "label": "transformers semantic tokens",
+      "request": "typeServer/semanticTokens",
+      "file": "src/transformers_semantic.py",
+      "start_line": 0,
+      "start_character": 0,
+      "end_line": 999,
+      "end_character": 0,
+      "validation": {
+        "requireNonEmpty": true,
+        "minSizeChars": 50
+      }
+    },
+    {
+      "label": "stdlib semantic tokens",
+      "request": "typeServer/semanticTokens",
+      "file": "src/stdlib_semantic.py",
+      "start_line": 0,
+      "start_character": 0,
+      "end_line": 999,
+      "end_character": 0,
+      "validation": {
+        "requireNonEmpty": true,
+        "minSizeChars": 50
+      }
+    }
+  ]
+}

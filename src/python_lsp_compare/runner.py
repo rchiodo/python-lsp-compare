@@ -15,6 +15,7 @@ from .lsp_client import LspClient
 from .metrics import BenchmarkPointReport, BenchmarkSuiteReport, CallMetric, RunReport, ScenarioReport
 from .scenarios.base import SAMPLE_SOURCE, ScenarioContext
 from .scenarios.builtin import BUILTIN_SCENARIOS
+from .tsp_semantic_tokens import compute_semantic_tokens
 
 
 def run_scenarios(
@@ -172,7 +173,6 @@ def _run_single_benchmark_suite(
     progress: Callable[[str], None] | None,
     response_log: io.TextIOBase | None = None,
 ) -> BenchmarkSuiteReport:
-    started_perf = time.perf_counter()
     _emit_progress(progress, f"[{suite.name}] preparing benchmark environment")
     benchmark_environment = prepare_benchmark_environment(
         suite=suite,
@@ -183,6 +183,7 @@ def _run_single_benchmark_suite(
         environment_root=environment_root,
         logger=progress,
     )
+    started_perf = time.perf_counter()
 
     _emit_progress(progress, f"[{suite.name}] launch command: {benchmark_environment.launch_command}")
     _emit_progress(progress, f"[{suite.name}] workspace root: {benchmark_environment.workspace_root}")
@@ -397,6 +398,7 @@ def _run_tsp_benchmark_point(
             result = _dispatch_tsp_request(
                 client,
                 point.request,
+                point.file_path,
                 uri,
                 point.start_line,
                 point.start_character,
@@ -491,6 +493,7 @@ def _run_tsp_edit_benchmark_point(
             result = _dispatch_tsp_request(
                 client,
                 edit_point.request,
+                edit_point.file_path,
                 uri,
                 edit_point.query_start_line,
                 edit_point.query_start_character,
@@ -685,6 +688,7 @@ def _dispatch_benchmark_request(
 def _dispatch_tsp_request(
     client: LspClient,
     method: str,
+    file_path: Path,
     uri: str,
     start_line: int,
     start_character: int,
@@ -706,7 +710,59 @@ def _dispatch_tsp_request(
         return client.tsp_get_declared_type(node, snapshot, context=context)
     if method == "typeServer/getExpectedType":
         return client.tsp_get_expected_type(node, snapshot, context=context)
+    if method == "typeServer/semanticTokens":
+        return _run_tsp_semantic_tokens_request(
+            client=client,
+            file_path=file_path,
+            snapshot=snapshot,
+            start_line=start_line,
+            start_character=start_character,
+            end_line=end_line,
+            end_character=end_character,
+            context=context,
+        )
     raise ValueError(f"Unsupported TSP benchmark method: {method}")
+
+
+def _run_tsp_semantic_tokens_request(
+    *,
+    client: LspClient,
+    file_path: Path,
+    snapshot: int,
+    start_line: int,
+    start_character: int,
+    end_line: int,
+    end_character: int,
+    context: dict[str, object],
+) -> object:
+    started_perf = time.perf_counter()
+    try:
+        result = compute_semantic_tokens(
+            client,
+            file_path,
+            snapshot=snapshot,
+            start_line=start_line,
+            start_character=start_character,
+            end_line=end_line,
+            end_character=end_character,
+            context=dict(context),
+        )
+    except Exception as exc:
+        client.record_local_request(
+            "typeServer/semanticTokens",
+            (time.perf_counter() - started_perf) * 1000,
+            success=False,
+            error={"message": str(exc)},
+            context=context,
+        )
+        raise
+    client.record_local_request(
+        "typeServer/semanticTokens",
+        (time.perf_counter() - started_perf) * 1000,
+        result=result,
+        context=context,
+    )
+    return result
 
 
 def _open_benchmark_documents(client: LspClient, suite: BenchmarkSuite) -> list[str]:
@@ -956,6 +1012,7 @@ def _effective_validation_thresholds(method: str, validation: BenchmarkValidatio
             "typeServer/getComputedType",
             "typeServer/getDeclaredType",
             "typeServer/getExpectedType",
+            "typeServer/semanticTokens",
         }
     return thresholds
 

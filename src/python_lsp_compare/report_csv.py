@@ -83,6 +83,7 @@ def _build_benchmark_rows(
                         "scenario_name": "",
                         "point_label": point.get("label", ""),
                         "method": point.get("method", ""),
+                        "method_display": _display_method_name(point.get("method")),
                         "success": point.get("success", False),
                         "mean_ms": point.get("summary", {}).get("mean_ms"),
                         "p95_ms": point.get("summary", {}).get("p95_ms"),
@@ -134,6 +135,7 @@ def _build_scenario_rows(
                     "scenario_name": scenario_name,
                     "point_label": "",
                     "method": "",
+                    "method_display": "",
                     "success": report.get("success", False),
                     "mean_ms": report.get("summary", {}).get("mean_ms"),
                     "p95_ms": report.get("summary", {}).get("p95_ms"),
@@ -147,6 +149,12 @@ def _build_scenario_rows(
                 }
             )
     return rows
+
+
+def _display_method_name(method: str | None) -> str:
+    if method == "typeServer/semanticTokens":
+        return "semantic token impl using typeServer/getComputedType"
+    return "" if method is None else method
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -190,6 +198,7 @@ def _preferred_result_metric(method: str | None, metrics: list[dict[str, Any]]) 
         "typeServer/getComputedType": ("type_name", "Type name"),
         "typeServer/getDeclaredType": ("type_name", "Type name"),
         "typeServer/getExpectedType": ("type_name", "Type name"),
+        "typeServer/semanticTokens": ("semantic_token_count", "Semantic tokens found"),
     }
     if method in candidates:
         key, label = candidates[method]

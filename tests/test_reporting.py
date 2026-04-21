@@ -287,6 +287,72 @@ class ReportingTests(unittest.TestCase):
             self.assertIn("str", markdown)
             self.assertTrue(any(row["result_metric_name"] == "type_name" for row in rows))
 
+    def test_render_markdown_report_shows_friendly_semantic_token_method_name(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            report_path = temp_path / "semantic.json"
+            summary_path = temp_path / "summary.json"
+
+            report_path.write_text(
+                json.dumps(
+                    {
+                        "benchmark_reports": [
+                            {
+                                "name": "tsp_semantic",
+                                "success": True,
+                                "total_duration_ms": 10.0,
+                                "points": [
+                                    {
+                                        "label": "django semantic tokens",
+                                        "method": "typeServer/semanticTokens",
+                                        "file_path": "semantic.py",
+                                        "line": 1,
+                                        "character": 1,
+                                        "success": True,
+                                        "summary": {
+                                            "mean_ms": 1.0,
+                                            "p95_ms": 1.0,
+                                            "validation": {"passed": True, "failure_count": 0},
+                                        },
+                                        "metrics": [
+                                            {
+                                                "kind": "request",
+                                                "method": "typeServer/semanticTokens",
+                                                "duration_ms": 1.0,
+                                                "result_summary": {
+                                                    "present": True,
+                                                    "empty": False,
+                                                    "top_level_count": 12,
+                                                },
+                                                "context": {"phase": "measured"},
+                                            }
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            summary_path.write_text(
+                json.dumps(
+                    {
+                        "generated_at": "20260320T000000Z",
+                        "baseline_server": "pyrefly",
+                        "requested_benchmarks": ["tsp_semantic"],
+                        "servers": [
+                            {"id": "pyrefly", "display_name": "Pyrefly", "output_path": str(report_path), "success": True},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            markdown = render_markdown_report(summary_path, baseline_server_id="pyrefly")
+            self.assertIn("semantic token impl using typeServer/getComputedType", markdown)
+            self.assertNotIn("Method: `typeServer/semanticTokens`", markdown)
+
     def test_render_markdown_report_includes_server_only_tsp_benchmark(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

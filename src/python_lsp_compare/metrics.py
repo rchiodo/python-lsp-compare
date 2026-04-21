@@ -217,6 +217,19 @@ def _summarize_result(method: str, result: Any) -> dict[str, Any]:
         if type_argument_count is not None:
             summary["type_argument_count"] = type_argument_count
         summary["has_declaration_node"] = _has_declaration_node(result)
+    elif method == "typeServer/semanticTokens":
+        semantic_token_count = _semantic_token_count(result)
+        if semantic_token_count is not None:
+            summary["semantic_token_count"] = semantic_token_count
+        type_query_count = _numeric_result_field(result, "type_query_count")
+        if type_query_count is not None:
+            summary["type_query_count"] = type_query_count
+        type_query_failure_count = _numeric_result_field(result, "type_query_failure_count")
+        if type_query_failure_count is not None:
+            summary["type_query_failure_count"] = type_query_failure_count
+        token_type_count = _token_type_count(result)
+        if token_type_count is not None:
+            summary["token_type_count"] = token_type_count
     return summary
 
 
@@ -349,3 +362,26 @@ def _type_argument_count(result: Any) -> int | None:
 
 def _has_declaration_node(result: Any) -> bool:
     return isinstance(result, dict) and isinstance(result.get("declaration"), dict)
+
+
+def _semantic_token_count(result: Any) -> int | None:
+    if isinstance(result, dict):
+        count = result.get("semantic_token_count")
+        if isinstance(count, int):
+            return count
+        data = result.get("data")
+        if isinstance(data, list):
+            return len(data) // 5
+    return None
+
+
+def _numeric_result_field(result: Any, field: str) -> int | None:
+    if isinstance(result, dict) and isinstance(result.get(field), int):
+        return int(result[field])
+    return None
+
+
+def _token_type_count(result: Any) -> int | None:
+    if isinstance(result, dict) and isinstance(result.get("token_type_counts"), dict):
+        return len(result["token_type_counts"])
+    return None
