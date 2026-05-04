@@ -40,14 +40,19 @@ jobs:
       - name: Run benchmarks
         run: python -m python_lsp_compare bench-servers --baseline-server pyright
 
+      - id: pr-metadata
+        name: Capture PR datetime
+        run: echo "timestamp=$(date -u +'%Y-%m-%d %H:%M UTC')" >> "$GITHUB_OUTPUT"
+
       - name: Create pull request for results
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ steps.app-token.outputs.token }}
           commit-message: Update benchmark results from workflow runner
           branch: automation/benchmark-results
+          branch-suffix: timestamp
           delete-branch: true
-          title: Update benchmark results
+          title: Update benchmark results (${{ steps.pr-metadata.outputs.timestamp }})
           body: |
             Automated benchmark result update from the scheduled workflow run.
           add-paths: |
