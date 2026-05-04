@@ -155,7 +155,7 @@ def handle_request(message: dict[str, Any], args: argparse.Namespace) -> dict[st
     return {"jsonrpc": "2.0", "id": request_id, "result": None}
 
 
-def request_workspace_configuration(output_path: str) -> None:
+def request_workspace_configuration(output_path: str, args: argparse.Namespace) -> None:
     request_id = 9000
     write_message(
         {
@@ -176,6 +176,11 @@ def request_workspace_configuration(output_path: str) -> None:
         if response is None:
             raise RuntimeError("client closed before replying to workspace/configuration")
         if response.get("id") != request_id:
+            # The client may continue sending notifications/requests while we wait for
+            # the workspace/configuration response. Handle them so they are not dropped.
+            follow_up = handle_request(response, args)
+            if follow_up is not None:
+                write_message(follow_up)
             continue
         with open(output_path, "w", encoding="utf-8") as handle:
             json.dump(response.get("result"), handle, indent=2)
@@ -205,7 +210,7 @@ def main() -> int:
             and args.request_workspace_config_output
             and not requested_workspace_config
         ):
-            request_workspace_configuration(args.request_workspace_config_output)
+            request_workspace_configuration(args.request_workspace_config_output, args)
             requested_workspace_config = True
         response = handle_request(message, args)
         if response is not None:
